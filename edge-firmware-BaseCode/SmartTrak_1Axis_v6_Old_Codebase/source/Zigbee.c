@@ -1,0 +1,291 @@
+
+
+#include <GenericTypeDefs.h>
+
+#include "config.h"				// compile time configuration definitions
+
+#include "gsfstd.h"						// gsf standard #defines
+#include "Debug.h"
+
+#include "HardwareProfile.h"
+
+#include "LEDs.h"				// LED display handler function definition, used for stall recovery states
+#include "SmartTrak.h"
+#include "SerialDisplay.h"
+#include "SerialPort.h"
+#include "Zigbee.h"
+
+#ifdef DIGI
+#define RX_Buf(x)                   ((2*x)+5)
+//PRIVATE_INIT BYTE Temp = 0;
+
+BOOL Check_RX(UART_MODULE UARTid)
+{
+    UINT8 xbeeBufferIndex = 0;
+    char rdata;
+    // start serial receive process
+    // if there is already a byte available, skip StartSerialRx() so we do not lose it.
+    if (AnySerialRxDataAvailable(UARTid) IS_FALSE)
+    {
+        IGNORE_RETURN_VALUE StartSerialRx(UARTid);
+    }
+    // check for available data ==> this is WRONG, does not handle end of buffer correctly!!
+    while(xbeeBufferIndex IS_NOT 19)
+    {
+    if ((AnySerialRxDataAvailable(UARTid) IS_TRUE))
+    {
+
+            pgcMBBuffer[xbeeBufferIndex] = (char)ReadSerialRxdData(UARTid);
+            rdata = pgcMBBuffer[xbeeBufferIndex];
+            xbeeBufferIndex++;
+
+     //   return TRUE;
+    }
+    //else
+     //   return FALSE;
+    }
+    return TRUE;
+}
+
+void Xbee_Frame(unsigned char *xbee_pkt,unsigned char *Msg,UINT8 len,unsigned char *Coor_Addr)
+{  //responce msg
+
+    int i=0,pkt_len;UINT16 sum=0x0000;UINT16 check_sum;
+    xbee_pkt[0] = delimeter;
+    xbee_pkt[1] = 0x00;
+    xbee_pkt[2] = 0x0E + len;   ///length excludes 4 bytes 0x0E+lenghth of the string
+    xbee_pkt[3] = frametype_tx;
+    xbee_pkt[4] = frameid;
+    xbee_pkt[5] = Coor_Addr[0];
+    xbee_pkt[6] = Coor_Addr[1];
+    xbee_pkt[7] = Coor_Addr[2];
+    xbee_pkt[8] = Coor_Addr[3];
+    xbee_pkt[9] = Coor_Addr[4];
+    xbee_pkt[10] = Coor_Addr[5];
+    xbee_pkt[11] = Coor_Addr[6];
+    xbee_pkt[12] = Coor_Addr[7];
+    xbee_pkt[13] = destadd_16bitMB;
+    xbee_pkt[14] = destadd_16bitLB;
+    xbee_pkt[15] = brodcast;
+    xbee_pkt[16] = 0x01;//options;
+
+    pkt_len = 17;
+    for(i=0;Msg[i] != '\0';i++,pkt_len++)
+        xbee_pkt[pkt_len] = Msg[i];
+
+    for(i=3;i<pkt_len;i++)
+    {
+        sum = sum + xbee_pkt[i];
+    }
+    check_sum = (0xFF-(sum&0x00FF));
+    xbee_pkt[pkt_len]=check_sum;
+    SetTXLen[SERIAL_REMOTE_UART] = pkt_len;
+
+
+}
+
+#endif
+
+#ifdef CC2530
+
+#define RX_Buf(x)                   ((2*x)+5)
+PRIVATE_INIT BYTE Temp = 0;
+/*
+BOOL Check_RX(UART_MODULE UARTid)
+{
+    UINT8 xbeeBufferIndex = 0,ST=FALSE;
+    int cnt=0;
+    char rdata;
+    // start serial receive process
+    // if there is already a byte available, skip StartSerialRx() so we do not lose it.
+    if (AnySerialRxDataAvailable(UARTid) IS_FALSE)
+    {
+        IGNORE_RETURN_VALUE StartSerialRx(UARTid);
+    }
+    // check for available data ==> this is WRONG, does not handle end of buffer correctly!!
+    while(xbeeBufferIndex IS_NOT 7)
+    {
+        cnt++;
+        if(cnt == 30000)             // if UART in block state, need to return?? 10000 fine
+        {
+            ST = FALSE;
+            break;
+        }
+    if ((AnySerialRxDataAvailable(UARTid) IS_TRUE))
+    {
+            pgcMBBuffer[xbeeBufferIndex] = (char)ReadSerialRxdData(UARTid);
+            rdata = pgcMBBuffer[xbeeBufferIndex];
+            xbeeBufferIndex++;
+            ST = TRUE;
+            cnt = 0;
+      // return TRUE;
+    }
+    
+    }
+    return ST;
+}*/
+BOOL Check_RX(UART_MODULE UARTid)
+{
+    UINT8 xbeeBufferIndex = 0;
+    char rdata;
+    // start serial receive process
+    // if there is already a byte available, skip StartSerialRx() so we do not lose it.
+    if (AnySerialRxDataAvailable(UARTid) IS_FALSE)
+    {
+        IGNORE_RETURN_VALUE StartSerialRx(UARTid);
+    }
+    // check for available data ==> this is WRONG, does not handle end of buffer correctly!!
+    while(xbeeBufferIndex IS_NOT 7)
+    {
+    if ((AnySerialRxDataAvailable(UARTid) IS_TRUE))
+    {
+
+            pgcMBBuffer[xbeeBufferIndex] = (char)ReadSerialRxdData(UARTid);
+            rdata = pgcMBBuffer[xbeeBufferIndex];
+            xbeeBufferIndex++;
+
+     //   return TRUE;
+    }
+    //else
+     //   return FALSE;
+    }
+}
+int strcmpn(unsigned char *array1, unsigned char *array2,int n)
+{
+   int i=0,j=0;
+   for(i=0;i<n;i++)
+   {
+     if(array1[i] == array2[i])
+        j++;
+   }
+   if(j==n)
+    return 0;
+   else
+    return 1;
+}
+BOOL Check_PKT_Format(unsigned char *src,unsigned char size)
+{
+    //02 A8 79 C3 0F
+    unsigned char pkt_st[10];
+    pkt_st[0] = 0x02;
+    pkt_st[1] = 0xA8;
+    pkt_st[2] = 0x79;
+    pkt_st[3] = 0xC3;
+    pkt_st[4] = 0x0F;
+
+
+      if(strcmpn(pkt_st,src,size) == 0)
+        return TRUE;
+      else
+          return FALSE;
+
+
+}
+BOOL Check_PKT1_Format(unsigned char *src,unsigned char size)
+{
+    //03 A8 79 C3 0F  // broadcast msg
+    unsigned char pkt_st[10];
+    pkt_st[0] = 0x03;
+    pkt_st[1] = 0xA8;
+    pkt_st[2] = 0x79;
+    pkt_st[3] = 0xC3;
+    pkt_st[4] = 0x0F;
+
+
+      if(strcmpn(pkt_st,src,size) == 0)
+        return TRUE;
+      else
+          return FALSE;
+
+
+}
+BOOL Check_RDP_Format(unsigned char *src,unsigned char size)
+{
+    //02 A8 79 C3 0F
+    int i=0,j=0;
+    unsigned char pkt_st[10];
+    pkt_st[0] = 0x02;
+    pkt_st[1] = 0xA8;
+    pkt_st[2] = 0x79;
+    pkt_st[3] = 0xC3;
+    pkt_st[4] = 0x0E;
+
+      if(strcmpn(pkt_st,src,size) == 0)
+        return TRUE;
+      else
+          return FALSE;
+
+}
+BOOL CHECK_XBEE_ADDR(unsigned char *src)
+{
+      if(strcmpn(src,xbee_addr,2) == 0)
+        return TRUE;
+      else
+          return FALSE;
+}
+void Read_Address()
+{    //02 A8 79 C3 0E
+
+    char xbee_pkt[10];
+    xbee_pkt[0] = 0x02;
+    xbee_pkt[1] = 0xA8;
+    xbee_pkt[2] = 0x79;
+    xbee_pkt[3] = 0xC3;
+    xbee_pkt[4] = 0x0E;
+
+    SetTXLen = 4;
+    TXMode = 1;
+    SendMBMessage(SERIAL_MENU_UART,xbee_pkt,5, WAIT_FOR_DISPLAY);
+    Check_RX(SERIAL_MENU_UART);
+    TXMode = 0;
+    //02 A8 79 C3 0E 22 06
+ //   if(Check_RDP_Format(pgcMBBuffer,5) IS TRUE)
+    {
+        xbee_addr[0] = pgcMBBuffer[5];
+        xbee_addr[1] = pgcMBBuffer[6];
+    }
+}
+//one to one
+void Xbee_Frame(unsigned char *xbee_pkt,char *Msg,UINT8 len,char *Coor_Addr)
+{  //02A879C30F 1111 2233 0B 5354
+
+    int i=0,pkt_len;
+    xbee_pkt[0] = 0x02;
+    xbee_pkt[1] = 0xA8;
+    xbee_pkt[2] = 0x79;
+    xbee_pkt[3] = 0xC3;
+    xbee_pkt[4] = 0x0F;
+    xbee_pkt[5] = Coor_Addr[0];
+    xbee_pkt[6] = Coor_Addr[1];
+    xbee_pkt[7] = xbee_addr[0];
+    xbee_pkt[8] = xbee_addr[1];
+    xbee_pkt[9] = 0x09 + len; //prev bytes + len of str
+    pkt_len = 10;
+    for(i=0;Msg[i] != '\0';i++,pkt_len++)
+        xbee_pkt[pkt_len] = Msg[i];
+
+    SetTXLen = pkt_len;
+}
+//one to coordinates
+void Xbee_Frame1(unsigned char *xbee_pkt,char *Msg,UINT8 len,char *Coor_Addr)
+{  //02A879C30A 0B 5354
+
+    int i=0,pkt_len;
+    xbee_pkt[0] = 0x02;
+    xbee_pkt[1] = 0xA8;
+    xbee_pkt[2] = 0x79;
+    xbee_pkt[3] = 0xC3;
+    xbee_pkt[4] = 0x0A;
+//    xbee_pkt[5] = Coor_Addr[0];
+//    xbee_pkt[6] = Coor_Addr[1];
+//    xbee_pkt[7] = xbee_addr[0];
+//    xbee_pkt[8] = xbee_addr[1];
+    xbee_pkt[5] = 0x05 + len; //prev bytes + len of str
+    pkt_len = 6;
+    for(i=0;Msg[i] != '\0';i++,pkt_len++)
+        xbee_pkt[pkt_len] = Msg[i];
+
+    SetTXLen = pkt_len;
+}
+
+#endif

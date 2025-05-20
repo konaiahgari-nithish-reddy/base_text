@@ -1,0 +1,4 @@
+// Include directories for VC++ and PC Lint installation on 'Cumulus'
+
+-i"C:\Program Files\PC-Lint 8.0\lnt"
+

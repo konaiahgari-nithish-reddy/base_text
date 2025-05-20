@@ -1,0 +1,76 @@
+*************************** START ****************************
+START TIME: 202403262352
+CONNECT BAUD: 115200
+set state: ESP_DL_SYNC
+serial port opened
+-----------
+baud:115200
+root baud:115200
+-------------
+===============BAUD : 115200===============CALL DEVICE SYNC
+connecting...
+mac l: 0xcd1b4b0
+mac h: 0xdcda
+get mac res: 1
+get flash id : 0x0016405e
+manufacturer_id: 0x5e
+device_id: 0x4016
+Wrote 20192 bytes (12383 compressed) at 0x00000000 in 0.7 seconds (effective 227.0 kbit/s)...
+Hash of data verified.Wrote 3072 bytes (106 compressed) at 0x00008000 in 0.1 seconds (effective 299.8 kbit/s)...
+Hash of data verified.Wrote 1120832 bytes (635272 compressed) at 0x00010000 in 17.5 seconds (effective 511.5 kbit/s)...
+Hash of data verified.
+Leaving...
+com closed
+Use time: 27 s
+Download result: PASS
+*************************** END ****************************
+
+*************************** START ****************************
+START TIME: 202403262353
+CONNECT BAUD: 115200
+set state: ESP_DL_SYNC
+serial port opened
+-----------
+baud:115200
+root baud:115200
+-------------
+===============BAUD : 115200===============CALL DEVICE SYNC
+connecting...
+mac l: 0xcd1b4b0
+mac h: 0xdcda
+get mac res: 1
+get flash id : 0x0016405e
+manufacturer_id: 0x5e
+device_id: 0x4016
+com closed
+Use time: 17 s
+Download result: PASS
+*************************** END ****************************
+
+*************************** START ****************************
+START TIME: 202403262354
+CONNECT BAUD: 115200
+set state: ESP_DL_SYNC
+serial port opened
+-----------
+baud:115200
+root baud:115200
+-------------
+===============BAUD : 115200===============CALL DEVICE SYNC
+connecting...
+mac l: 0xcd1b4b0
+mac h: 0xdcda
+get mac res: 1
+get flash id : 0x0016405e
+manufacturer_id: 0x5e
+device_id: 0x4016
+Wrote 20192 bytes (12383 compressed) at 0x00000000 in 0.6 seconds (effective 283.0 kbit/s)...
+Hash of data verified.Wrote 3072 bytes (106 compressed) at 0x00008000 in 0.0 seconds (effective 498.1 kbit/s)...
+Hash of data verified.Wrote 1120832 bytes (635272 compressed) at 0x00010000 in 17.2 seconds (effective 522.7 kbit/s)...
+Hash of data verified.
+Leaving...
+com closed
+Use time: 26 s
+Download result: PASS
+*************************** END ****************************
+

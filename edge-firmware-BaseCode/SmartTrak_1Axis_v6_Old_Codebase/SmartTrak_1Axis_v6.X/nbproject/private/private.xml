@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project-private xmlns="http://www.netbeans.org/ns/project-private/1">
+    <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/1"/>
+    <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
+    <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
+        <group>
+            <file>file:/C:/Users/Das/Desktop/Tracker_atmode/SmartTrak_1Axis_v6/Include/gsfstd.h</file>
+            <file>file:/C:/Users/Das/Desktop/Tracker_atmode/SmartTrak_1Axis_v6/Include/Debounce.h</file>
+            <file>file:/C:/Users/Das/Desktop/Tracker_atmode/SmartTrak_1Axis_v6/source/Debounce.c</file>
+            <file>file:/C:/Users/Das/Desktop/Tracker_atmode/SmartTrak_1Axis_v6/Include/MenuFSM.h</file>
+            <file>file:/C:/Users/Das/Desktop/Tracker_atmode/SmartTrak_1Axis_v6/source/TimeDelay.c</file>
+            <file>file:/C:/Users/Das/Desktop/Tracker_atmode/SmartTrak_1Axis_v6/source/MenuFSM.c</file>
+            <file>file:/C:/Users/Das/Desktop/Tracker_atmode/SmartTrak_1Axis_v6/source/main.c</file>
+            <file>file:/C:/Users/Das/Desktop/Tracker_atmode/SmartTrak_1Axis_v6/Include/Inclinometer.h</file>
+            <file>file:/C:/Users/Das/Desktop/Tracker_atmode/SmartTrak_1Axis_v6/source/Stubs.c</file>
+            <file>file:/C:/Users/Das/Desktop/Tracker_atmode/SmartTrak_1Axis_v6/Include/EventFlags.h</file>
+            <file>file:/C:/Users/Das/Desktop/Tracker_atmode/SmartTrak_1Axis_v6/Include/Config.h</file>
+            <file>file:/C:/Users/Das/Desktop/Tracker_atmode/SmartTrak_1Axis_v6/source/SerialDisplay.c</file>
+            <file>file:/C:/Users/Das/Desktop/Tracker_atmode/SmartTrak_1Axis_v6/Include/SerialDisplay.h</file>
+            <file>file:/C:/Users/Das/Desktop/Tracker_atmode/SmartTrak_1Axis_v6/source/Inclinometer.c</file>
+            <file>file:/C:/Users/Das/Desktop/Tracker_atmode/xc32/v1.20/pic32-libs/include/peripheral/reset.h</file>
+        </group>
+    </open-files>
+</project-private>

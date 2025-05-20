@@ -1,0 +1,112 @@
+// *************************************************************************************************
+//										D e b o u n c e . C
+// *************************************************************************************************
+//
+//		Project:	SmartTrak Solar Panel Controller
+//
+//		Contains:	Switch Debounce definitions
+// *************************************************************************************************
+
+#ifdef USE_PCA9554_IO
+	void Input_Debounce_FSM(BOOL fReset);
+	BYTE GetInputSwitchState( void );
+#endif
+
+
+// MC1 Switches are Normally OPEN, Normally LOW
+
+// basic switch definitions within byte returned from GetInputSwitchState()
+#define	SWITCH1			0x01
+#define	SWITCH2			0x02
+#define	SWITCH3			0x04
+#define	SWITCH4			0x08
+#define	SWITCH5			0x10
+#define	SWITCH6			0x20
+#define	SWITCH7			0x40
+#define	SWITCH8			0x80
+
+#if defined(PLATFORM_SMARTTRAK_V1)
+	// switch usage definitions within byte returned from GetInputSwitchState()
+	#define	SW_UP			SWITCH1
+	#define	SW_EAST			SWITCH2
+	#define	SW_WEST			SWITCH3
+	#define	SW_DOWN			SWITCH4
+	//#define	SW_STOP			SWITCH5
+	#define	SW_SERVICE		SWITCH6		// Auto/Manual
+	#define	SW_RESET		SWITCH7		// ?
+	#define	SW_CALIBRATE	SWITCH8
+
+	#define	EF_SW_UP_SWITCH_CLOSED_EVENT		EF_SWITCH_1_CLOSED_EVENT
+	#define	EF_SW_UP_SWITCH_OPEN_EVENT		EF_SWITCH_1_OPEN_EVENT
+
+	#define	EF_SW_EAST_SWITCH_CLOSED_EVENT		EF_SWITCH_2_CLOSED_EVENT
+	#define	EF_SW_EAST_SWITCH_OPEN_EVENT		EF_SWITCH_2_OPEN_EVENT
+
+	#define	EF_SW_WEST_SWITCH_CLOSED_EVENT		EF_SWITCH_3_CLOSED_EVENT
+	#define	EF_SW_WEST_SWITCH_OPEN_EVENT		EF_SWITCH_3_OPEN_EVENT
+
+	#define	EF_SW_STOW_SWITCH_CLOSED_EVENT		EF_SWITCH_4_CLOSED_EVENT
+	#define	EF_SW_STOW_SWITCH_OPEN_EVENT		EF_SWITCH_4_OPEN_EVENT
+
+	//#define	EF_SW_STOP_SWITCH_CLOSED_EVENT		EF_SWITCH_5_CLOSED_EVENT
+	//#define	EF_SW_STOP_SWITCH_OPEN_EVENT		EF_SWITCH_5_OPEN_EVENT
+
+	#define	EF_SW_SERVICE_SWITCH_CLOSED_EVENT	EF_SWITCH_6_CLOSED_EVENT
+	#define	EF_SW_SERVICE_SWITCH_OPEN_EVENT		EF_SWITCH_6_OPEN_EVENT
+
+	#define	EF_SW_RESET_SWITCH_CLOSED_EVENT		EF_SWITCH_7_CLOSED_EVENT
+	#define	EF_SW_RESET_SWITCH_OPEN_EVENT		EF_SWITCH_7_OPEN_EVENT
+
+	#define	EF_SW_CALIBRATE_SWITCH_CLOSED_EVENT	EF_SWITCH_8_CLOSED_EVENT
+	#define	EF_SW_CALIBRATE_SWITCH_OPEN_EVENT	EF_SWITCH_8_OPEN_EVENT
+
+
+	// these #defines need specific switch assignments
+	#define	EF_MOVE_SWITCH_CLOSED_EVENTS_MASK	(WORD)(BITMASK(EF_SW_EAST_SWITCH_CLOSED_EVENT) | BITMASK(EF_SW_WEST_SWITCH_CLOSED_EVENT) | BITMASK(EF_SW_UP_SWITCH_CLOSED_EVENT) | BITMASK(EF_SW_STOW_SWITCH_CLOSED_EVENT))
+	#define EF_SWITCH_CLOSED_AZ_EVENTS_MASK		(WORD)(BITMASK(EF_SW_EAST_SWITCH_CLOSED_EVENT) | BITMASK(EF_SW_WEST_SWITCH_CLOSED_EVENT))
+	#define EF_SWITCH_CLOSED_EL_EVENTS_MASK		(WORD)(BITMASK(EF_SW_UP_SWITCH_CLOSED_EVENT) | BITMASK(EF_SW_STOW_SWITCH_CLOSED_EVENT))
+
+
+#elif defined(PLATFORM_PIC32_SK)
+	// switch usage definitions within byte returned from GetInputSwitchState()
+	#define	SW_WEST			SWITCH1
+	#define	SW_EAST			SWITCH2
+	#define	SW_CALIBRATE	SWITCH3
+
+	#define	EF_SW_WEST_SWITCH_CLOSED_EVENT		EF_SWITCH_1_CLOSED_EVENT
+	#define	EF_SW_WEST_SWITCH_OPEN_EVENT		EF_SWITCH_1_OPEN_EVENT
+
+	#define	EF_SW_EAST_SWITCH_CLOSED_EVENT		EF_SWITCH_2_CLOSED_EVENT
+	#define	EF_SW_EAST_SWITCH_OPEN_EVENT		EF_SWITCH_2_OPEN_EVENT
+
+	#define	EF_SW_CALIBRATE_SWITCH_CLOSED_EVENT	EF_SWITCH_3_CLOSED_EVENT
+	#define	EF_SW_CALIBRATE_SWITCH_OPEN_EVENT	EF_SWITCH_3_OPEN_EVENT
+
+	#define	EF_SW_UP_SWITCH_CLOSED_EVENT		EF_SWITCH_4_CLOSED_EVENT		// not available
+	#define	EF_SW_UP_SWITCH_OPEN_EVENT			EF_SWITCH_4_OPEN_EVENT			// not available
+
+	#define	EF_SW_STOW_SWITCH_CLOSED_EVENT		EF_SWITCH_4_CLOSED_EVENT		// not available
+	#define	EF_SW_STOW_SWITCH_OPEN_EVENT		EF_SWITCH_4_OPEN_EVENT			// not available
+
+	#define	EF_SW_SERVICE_SWITCH_CLOSED_EVENT	EF_SWITCH_4_CLOSED_EVENT		// not available
+	#define	EF_SW_SERVICE_SWITCH_OPEN_EVENT		EF_SWITCH_4_OPEN_EVENT			// not available
+
+	#define	EF_SW_RESET_SWITCH_CLOSED_EVENT		EF_SWITCH_4_CLOSED_EVENT		// not available
+	#define	EF_SW_RESET_SWITCH_OPEN_EVENT		EF_SWITCH_4_OPEN_EVENT			// not available
+
+	// these #defines need specific switch assignments
+	#define	EF_MOVE_SWITCH_CLOSED_EVENTS_MASK	(WORD)(BITMASK(EF_SW_EAST_SWITCH_CLOSED_EVENT) | BITMASK(EF_SW_WEST_SWITCH_CLOSED_EVENT))
+	#define EF_SWITCH_CLOSED_AZ_EVENTS_MASK		(WORD)(BITMASK(EF_SW_EAST_SWITCH_CLOSED_EVENT) | BITMASK(EF_SW_WEST_SWITCH_CLOSED_EVENT))
+#endif
+
+
+
+// virtual switch definitions
+#define	EF_VSW_STOP_SWITCH_CLOSED_EVENT		EF_VIRTUAL_SWITCH_9_CLOSED_EVENT
+#define	EF_VSW_STOP_SWITCH_OPEN_EVENT		EF_VIRTUAL_SWITCH_9_OPEN_EVENT
+
+#define	EF_VSW_SPA_TRACK_SWITCH_CLOSED_EVENT	EF_VIRTUAL_SWITCH_10_CLOSED_EVENT
+#define	EF_VSW_SPA_TRACK_SWITCH_OPEN_EVENT		EF_VIRTUAL_SWITCH_10_OPEN_EVENT
+
+
+// end of debounce.h

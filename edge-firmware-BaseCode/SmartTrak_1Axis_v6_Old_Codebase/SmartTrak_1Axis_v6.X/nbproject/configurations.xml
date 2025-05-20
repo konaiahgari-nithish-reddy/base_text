@@ -1,0 +1,389 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="65">
+  <logicalFolder name="root" displayName="root" projectFiles="true">
+    <logicalFolder name="HeaderFiles"
+                   displayName="Header Files"
+                   projectFiles="true">
+      <logicalFolder name="f1" displayName="BSP" projectFiles="true">
+        <itemPath>../Include/BSP/HardwareProfile_PIC32_STK.h</itemPath>
+        <itemPath>../Include/BSP/SerialPort.h</itemPath>
+        <itemPath>../Include/BSP/SST25VF016.h</itemPath>
+        <itemPath>../Include/BSP/DS3232.h</itemPath>
+        <itemPath>../Include/BSP/I2CBus.h</itemPath>
+        <itemPath>../Include/BSP/PCA9554.h</itemPath>
+        <itemPath>../Include/BSP/mma845x.h</itemPath>
+        <itemPath>../Include/BSP/SerialTimer.h</itemPath>
+        <itemPath>../Include/BSP/ADC10Read.h</itemPath>
+      </logicalFolder>
+      <logicalFolder name="f3"
+                     displayName="Microchip_Header_Files"
+                     projectFiles="true">
+        <itemPath>../Include/TimeDelay.h</itemPath>
+        <itemPath>../Include/Compiler.h</itemPath>
+      </logicalFolder>
+      <logicalFolder name="f2" displayName="PIC32MX_Peripheral" projectFiles="true">
+        <itemPath>../../xc32/v1.20/pic32-libs/include/peripheral/adc10.h</itemPath>
+        <itemPath>../../xc32/v1.20/pic32-libs/include/peripheral/i2c.h</itemPath>
+        <itemPath>../../xc32/v1.20/pic32-libs/include/peripheral/incap.h</itemPath>
+        <itemPath>../../xc32/v1.20/pic32-libs/include/peripheral/int.h</itemPath>
+        <itemPath>../../xc32/v1.20/pic32-libs/include/peripheral/int_1xx_2xx.h</itemPath>
+        <itemPath>../../xc32/v1.20/pic32-libs/include/peripheral/int_3xx_4xx.h</itemPath>
+        <itemPath>../../xc32/v1.20/pic32-libs/include/peripheral/int_5xx_6xx_7xx.h</itemPath>
+        <itemPath>../../xc32/v1.20/pic32-libs/include/peripheral/osc.h</itemPath>
+        <itemPath>../../xc32/v1.20/pic32-libs/include/peripheral/outcompare.h</itemPath>
+        <itemPath>../../xc32/v1.20/pic32-libs/include/peripheral/ports.h</itemPath>
+        <itemPath>../../xc32/v1.20/pic32-libs/include/peripheral/pps.h</itemPath>
+        <itemPath>../../xc32/v1.20/pic32-libs/include/peripheral/reset.h</itemPath>
+        <itemPath>../../xc32/v1.20/pic32-libs/include/peripheral/spi.h</itemPath>
+        <itemPath>../../xc32/v1.20/pic32-libs/include/peripheral/spi_1xx_2xx.h</itemPath>
+        <itemPath>../../xc32/v1.20/pic32-libs/include/peripheral/spi_3xx_4xx.h</itemPath>
+        <itemPath>../../xc32/v1.20/pic32-libs/include/peripheral/spi_5xx_6xx_7xx.h</itemPath>
+        <itemPath>../../xc32/v1.20/pic32-libs/include/peripheral/SPI_Port_Mappings.h</itemPath>
+        <itemPath>../../xc32/v1.20/pic32-libs/include/peripheral/system.h</itemPath>
+        <itemPath>../../xc32/v1.20/pic32-libs/include/peripheral/timer.h</itemPath>
+        <itemPath>../../xc32/v1.20/pic32-libs/include/peripheral/uart.h</itemPath>
+        <itemPath>../../xc32/v1.20/pic32-libs/include/peripheral/wdt.h</itemPath>
+        <itemPath>../../xc32/v1.20/pic32mx/include/peripheral/legacy/int_3xx_4xx_legacy.h</itemPath>
+      </logicalFolder>
+      <itemPath>../Include/Debug.h</itemPath>
+      <itemPath>../Include/EventFlags.h</itemPath>
+      <itemPath>../Include/GenericTypeDefs.h</itemPath>
+      <itemPath>../Include/gsfstd.h</itemPath>
+      <itemPath>../Include/HardwareProfile.h</itemPath>
+      <itemPath>../Include/SmartTrak.h</itemPath>
+      <itemPath>../Include/SerialDisplay.h</itemPath>
+      <itemPath>../Include/StrConversions.h</itemPath>
+      <itemPath>../Include/AppTimer.h</itemPath>
+      <itemPath>../Include/MenuFSM.h</itemPath>
+      <itemPath>../Include/ftoa.h</itemPath>
+      <itemPath>../Include/Stubs.h</itemPath>
+      <itemPath>../Include/MotionFSM.h</itemPath>
+      <itemPath>../Include/MotionStats.h</itemPath>
+      <itemPath>../Include/MotorPWM.h</itemPath>
+      <itemPath>../Include/MCUConfigurationBits.h</itemPath>
+      <itemPath>../Include/MotionSensor.h</itemPath>
+      <itemPath>../Include/MotionProfile.h</itemPath>
+      <itemPath>../Include/Debounce.h</itemPath>
+      <itemPath>../Include/MotionLimits.h</itemPath>
+      <itemPath>../Include/LEDs.h</itemPath>
+      <itemPath>../Include/MoveSequenceFSM.h</itemPath>
+      <itemPath>../Include/Config.h</itemPath>
+      <itemPath>../Include/MotionPhaseFSM.h</itemPath>
+      <itemPath>../Include/CoordTranslate.h</itemPath>
+      <itemPath>../Include/SunPosition.h</itemPath>
+      <itemPath>../Include/RTCC.h</itemPath>
+      <itemPath>../Include/ButtonProcessingFSM.h</itemPath>
+      <itemPath>../Include/Inclinometer.h</itemPath>
+      <itemPath>../Include/UpdateParameters.h</itemPath>
+      <itemPath>../Include/PanelPositionFSM.h</itemPath>
+      <itemPath>../Include/Zigbee.h</itemPath>
+      <itemPath>../Include/BMS.h</itemPath>
+    </logicalFolder>
+    <logicalFolder name="LibraryFiles"
+                   displayName="Library Files"
+                   projectFiles="true">
+    </logicalFolder>
+    <logicalFolder name="LinkerScript"
+                   displayName="Linker Files"
+                   projectFiles="true">
+    </logicalFolder>
+    <logicalFolder name="ObjectFiles"
+                   displayName="Object Files"
+                   projectFiles="true">
+    </logicalFolder>
+    <logicalFolder name="SourceFiles"
+                   displayName="Source Files"
+                   projectFiles="true">
+      <logicalFolder name="f1" displayName="BSP" projectFiles="true">
+        <itemPath>../BSP/SerialPort.c</itemPath>
+        <itemPath>../BSP/SST25VF016.c</itemPath>
+        <itemPath>../BSP/DS3232.c</itemPath>
+        <itemPath>../BSP/I2CBus.c</itemPath>
+        <itemPath>../BSP/PCA9554.c</itemPath>
+        <itemPath>../BSP/mma845x.c</itemPath>
+        <itemPath>../BSP/SerialTimer.c</itemPath>
+        <itemPath>../BSP/ADC10Read.c</itemPath>
+      </logicalFolder>
+      <itemPath>../source/Debug.c</itemPath>
+      <itemPath>../source/main.c</itemPath>
+      <itemPath>../source/SerialDisplay.c</itemPath>
+      <itemPath>../source/MenuFSM.c</itemPath>
+      <itemPath>../source/Stubs.c</itemPath>
+      <itemPath>../source/ftoa.c</itemPath>
+      <itemPath>../source/StrConversions.c</itemPath>
+      <itemPath>../source/TimeDelay.c</itemPath>
+      <itemPath>../source/SystemParameters.c</itemPath>
+      <itemPath>../source/MotorPWM.c</itemPath>
+      <itemPath>../source/MotionStats.c</itemPath>
+      <itemPath>../source/MotionSensor.c</itemPath>
+      <itemPath>../source/AppTimer.c</itemPath>
+      <itemPath>../source/MotionFSM.c</itemPath>
+      <itemPath>../source/MotionLimits.c</itemPath>
+      <itemPath>../source/MotionPhaseFSM.c</itemPath>
+      <itemPath>../source/MoveSequenceFSM.c</itemPath>
+      <itemPath>../source/CoordTranslate.c</itemPath>
+      <itemPath>../source/SunPosition.c</itemPath>
+      <itemPath>../source/RTCC.c</itemPath>
+      <itemPath>../source/Debounce.c</itemPath>
+      <itemPath>../source/ButtonProcessingFSM.c</itemPath>
+      <itemPath>../source/LEDs.c</itemPath>
+      <itemPath>../source/Inclinometer.c</itemPath>
+      <itemPath>../source/RxMessage.c</itemPath>
+      <itemPath>../source/UpdateParameters.c</itemPath>
+      <itemPath>../source/PanelPositionFSM.c</itemPath>
+      <itemPath>../source/Zigbee.c</itemPath>
+      <itemPath>../source/BMS.c</itemPath>
+    </logicalFolder>
+    <logicalFolder name="ExternalFiles"
+                   displayName="Important Files"
+                   projectFiles="false">
+      <itemPath>Makefile</itemPath>
+    </logicalFolder>
+  </logicalFolder>
+  <projectmakefile>Makefile</projectmakefile>
+  <confs>
+    <conf name="default" type="2">
+      <toolsSet>
+        <developmentServer>localhost</developmentServer>
+        <targetDevice>PIC32MX360F512L</targetDevice>
+        <targetHeader></targetHeader>
+        <targetPluginBoard></targetPluginBoard>
+        <platformTool>ICD3PlatformTool</platformTool>
+        <languageToolchain>XC32</languageToolchain>
+        <languageToolchainVersion>1.20</languageToolchainVersion>
+        <platform>3</platform>
+      </toolsSet>
+      <packs>
+        <pack name="PIC32MX_DFP" vendor="Microchip" version="1.0.53"/>
+      </packs>
+      <compileType>
+        <linkerTool>
+          <linkerLibItems>
+          </linkerLibItems>
+        </linkerTool>
+        <archiverTool>
+        </archiverTool>
+        <loading>
+          <useAlternateLoadableFile>false</useAlternateLoadableFile>
+          <parseOnProdLoad>false</parseOnProdLoad>
+          <alternateLoadableFile></alternateLoadableFile>
+        </loading>
+        <subordinates>
+        </subordinates>
+      </compileType>
+      <makeCustomizationType>
+        <makeCustomizationPreStepEnabled>false</makeCustomizationPreStepEnabled>
+        <makeCustomizationPreStep></makeCustomizationPreStep>
+        <makeCustomizationPostStepEnabled>false</makeCustomizationPostStepEnabled>
+        <makeCustomizationPostStep></makeCustomizationPostStep>
+        <makeCustomizationPutChecksumInUserID>false</makeCustomizationPutChecksumInUserID>
+        <makeCustomizationEnableLongLines>false</makeCustomizationEnableLongLines>
+        <makeCustomizationNormalizeHexFile>false</makeCustomizationNormalizeHexFile>
+      </makeCustomizationType>
+      <C32>
+        <property key="additional-warnings" value="true"/>
+        <property key="addresss-attribute-use" value="false"/>
+        <property key="enable-app-io" value="false"/>
+        <property key="enable-omit-frame-pointer" value="false"/>
+        <property key="enable-symbols" value="true"/>
+        <property key="enable-unroll-loops" value="false"/>
+        <property key="exclude-floating-point" value="false"/>
+        <property key="extra-include-directories"
+                  value="..;..\Include;..\Include\BSP;..\..\Include\BSP;..\..\xc32\v1.20\pic32mx\include\peripheral"/>
+        <property key="generate-16-bit-code" value="false"/>
+        <property key="generate-micro-compressed-code" value="false"/>
+        <property key="isolate-each-function" value="false"/>
+        <property key="make-warnings-into-errors" value="false"/>
+        <property key="optimization-level" value=""/>
+        <property key="place-data-into-section" value="false"/>
+        <property key="post-instruction-scheduling" value="default"/>
+        <property key="pre-instruction-scheduling" value="default"/>
+        <property key="preprocessor-macros"
+                  value="NOT_PIC32_STARTER_KIT;NOT___ENABLEIO_STARTERKIT_DEBUG"/>
+        <property key="strict-ansi" value="false"/>
+        <property key="support-ansi" value="false"/>
+        <property key="toplevel-reordering" value=""/>
+        <property key="unaligned-access" value=""/>
+        <property key="use-cci" value="false"/>
+        <property key="use-iar" value="false"/>
+        <property key="use-indirect-calls" value="false"/>
+        <appendMe value="-Wchar-subscripts"/>
+      </C32>
+      <C32-AR>
+        <property key="additional-options-chop-files" value="false"/>
+      </C32-AR>
+      <C32-AS>
+        <property key="assembler-symbols" value=""/>
+        <property key="enable-symbols" value="true"/>
+        <property key="exclude-floating-point-library" value="false"/>
+        <property key="expand-macros" value="false"/>
+        <property key="extra-include-directories-for-assembler" value=".."/>
+        <property key="extra-include-directories-for-preprocessor" value=""/>
+        <property key="false-conditionals" value="false"/>
+        <property key="generate-16-bit-code" value="false"/>
+        <property key="generate-micro-compressed-code" value="false"/>
+        <property key="keep-locals" value="false"/>
+        <property key="list-assembly" value="false"/>
+        <property key="list-source" value="false"/>
+        <property key="list-symbols" value="false"/>
+        <property key="oXC32asm-list-to-file" value="false"/>
+        <property key="omit-debug-dirs" value="false"/>
+        <property key="omit-forms" value="false"/>
+        <property key="preprocessor-macros" value=""/>
+        <property key="warning-level" value=""/>
+      </C32-AS>
+      <C32-CO>
+        <property key="coverage-enable" value=""/>
+      </C32-CO>
+      <C32-LD>
+        <property key="additional-options-use-response-files" value="false"/>
+        <property key="additional-options-write-sla" value="false"/>
+        <property key="allocate-dinit" value="false"/>
+        <property key="code-dinit" value="false"/>
+        <property key="ebase-addr" value=""/>
+        <property key="enable-check-sections" value="false"/>
+        <property key="exclude-floating-point-library" value="false"/>
+        <property key="exclude-standard-libraries" value="false"/>
+        <property key="extra-lib-directories" value=".."/>
+        <property key="fill-flash-options-addr" value=""/>
+        <property key="fill-flash-options-const" value=""/>
+        <property key="fill-flash-options-how" value="0"/>
+        <property key="fill-flash-options-inc-const" value="1"/>
+        <property key="fill-flash-options-increment" value=""/>
+        <property key="fill-flash-options-seq" value=""/>
+        <property key="fill-flash-options-what" value="0"/>
+        <property key="generate-16-bit-code" value="false"/>
+        <property key="generate-cross-reference-file" value="false"/>
+        <property key="generate-micro-compressed-code" value="false"/>
+        <property key="heap-size" value="4096"/>
+        <property key="input-libraries" value=""/>
+        <property key="kseg-length" value=""/>
+        <property key="kseg-origin" value=""/>
+        <property key="linker-symbols" value=""/>
+        <property key="map-file" value="&quot;$(BINDIR_)$(TARGETBASE).map&quot;"/>
+        <property key="no-device-startup-code" value="false"/>
+        <property key="no-startup-files" value="false"/>
+        <property key="oXC32ld-extra-opts" value=""/>
+        <property key="optimization-level" value=""/>
+        <property key="preprocessor-macros" value=""/>
+        <property key="remove-unused-sections" value="false"/>
+        <property key="report-memory-usage" value="false"/>
+        <property key="serial-length" value=""/>
+        <property key="serial-origin" value=""/>
+        <property key="stack-size" value="512"/>
+        <property key="symbol-stripping" value=""/>
+        <property key="trace-symbols" value=""/>
+        <property key="warn-section-align" value="false"/>
+      </C32-LD>
+      <C32CPP>
+        <property key="additional-warnings" value="false"/>
+        <property key="addresss-attribute-use" value="false"/>
+        <property key="check-new" value="false"/>
+        <property key="eh-specs" value="true"/>
+        <property key="enable-app-io" value="false"/>
+        <property key="enable-omit-frame-pointer" value="false"/>
+        <property key="enable-symbols" value="true"/>
+        <property key="enable-unroll-loops" value="false"/>
+        <property key="exceptions" value="true"/>
+        <property key="exclude-floating-point" value="false"/>
+        <property key="extra-include-directories" value=""/>
+        <property key="generate-16-bit-code" value="false"/>
+        <property key="generate-micro-compressed-code" value="false"/>
+        <property key="isolate-each-function" value="false"/>
+        <property key="make-warnings-into-errors" value="false"/>
+        <property key="optimization-level" value=""/>
+        <property key="place-data-into-section" value="false"/>
+        <property key="post-instruction-scheduling" value="default"/>
+        <property key="pre-instruction-scheduling" value="default"/>
+        <property key="preprocessor-macros" value=""/>
+        <property key="rtti" value="true"/>
+        <property key="strict-ansi" value="false"/>
+        <property key="toplevel-reordering" value=""/>
+        <property key="unaligned-access" value=""/>
+        <property key="use-cci" value="false"/>
+        <property key="use-iar" value="false"/>
+        <property key="use-indirect-calls" value="false"/>
+      </C32CPP>
+      <C32Global>
+        <property key="common-include-directories" value=""/>
+        <property key="gp-relative-option" value=""/>
+        <property key="legacy-libc" value="false"/>
+        <property key="mdtcm" value=""/>
+        <property key="mitcm" value=""/>
+        <property key="mstacktcm" value="false"/>
+        <property key="relaxed-math" value="false"/>
+        <property key="save-temps" value="false"/>
+        <property key="wpo-lto" value="false"/>
+        <appendMe value="-Wchar-subscripts"/>
+      </C32Global>
+      <ICD3PlatformTool>
+        <property key="ADC 1" value="true"/>
+        <property key="AutoSelectMemRanges" value="auto"/>
+        <property key="CHANGE NOTICE" value="true"/>
+        <property key="COMPARATOR" value="true"/>
+        <property key="DMA" value="true"/>
+        <property key="Freeze All Other Peripherals" value="true"/>
+        <property key="I2C1" value="true"/>
+        <property key="I2C2" value="true"/>
+        <property key="INPUT CAPTURE 1" value="true"/>
+        <property key="INPUT CAPTURE 2" value="true"/>
+        <property key="INPUT CAPTURE 3" value="true"/>
+        <property key="INPUT CAPTURE 4" value="true"/>
+        <property key="INPUT CAPTURE 5" value="true"/>
+        <property key="INTERRUPT CONTROL" value="true"/>
+        <property key="OUTPUT COMPARE 1" value="true"/>
+        <property key="OUTPUT COMPARE 2" value="true"/>
+        <property key="OUTPUT COMPARE 3" value="true"/>
+        <property key="OUTPUT COMPARE 4" value="true"/>
+        <property key="OUTPUT COMPARE 5" value="true"/>
+        <property key="PARALLEL MASTER/SLAVE PORT" value="true"/>
+        <property key="REAL TIME CLOCK" value="true"/>
+        <property key="SPI 1" value="true"/>
+        <property key="SPI 2" value="true"/>
+        <property key="SecureSegment.SegmentProgramming" value="FullChipProgramming"/>
+        <property key="TIMER1" value="true"/>
+        <property key="TIMER2" value="true"/>
+        <property key="TIMER3" value="true"/>
+        <property key="TIMER4" value="true"/>
+        <property key="TIMER5" value="true"/>
+        <property key="ToolFirmwareFilePath"
+                  value="Press to browse for a specific firmware version"/>
+        <property key="ToolFirmwareOption.UseLatestFirmware" value="true"/>
+        <property key="UART1" value="true"/>
+        <property key="UART2" value="true"/>
+        <property key="debugoptions.useswbreakpoints" value="true"/>
+        <property key="firmware.download.all" value="false"/>
+        <property key="hwtoolclock.frcindebug" value="false"/>
+        <property key="memories.aux" value="false"/>
+        <property key="memories.bootflash" value="false"/>
+        <property key="memories.configurationmemory" value="false"/>
+        <property key="memories.configurationmemory2" value="true"/>
+        <property key="memories.dataflash" value="true"/>
+        <property key="memories.eeprom" value="true"/>
+        <property key="memories.flashdata" value="true"/>
+        <property key="memories.id" value="true"/>
+        <property key="memories.instruction.ram" value="true"/>
+        <property key="memories.instruction.ram.ranges"
+                  value="${memories.instruction.ram.ranges}"/>
+        <property key="memories.programmemory" value="true"/>
+        <property key="memories.programmemory.ranges" value="1d000000-1d07ffff"/>
+        <property key="poweroptions.powerenable" value="false"/>
+        <property key="programoptions.donoteraseauxmem" value="false"/>
+        <property key="programoptions.eraseb4program" value="true"/>
+        <property key="programoptions.preservedataflash" value="false"/>
+        <property key="programoptions.preservedataflash.ranges" value=""/>
+        <property key="programoptions.preserveeeprom" value="false"/>
+        <property key="programoptions.preserveeeprom.ranges" value=""/>
+        <property key="programoptions.preserveprogram.ranges" value=""/>
+        <property key="programoptions.preserveprogramrange" value="false"/>
+        <property key="programoptions.preserveuserid" value="false"/>
+        <property key="programoptions.programcalmem" value="false"/>
+        <property key="programoptions.programuserotp" value="false"/>
+        <property key="programoptions.testmodeentrymethod" value="VDDFirst"/>
+        <property key="programoptions.usehighvoltageonmclr" value="false"/>
+        <property key="programoptions.uselvpprogramming" value="false"/>
+        <property key="voltagevalue" value="3.25"/>
+      </ICD3PlatformTool>
+    </conf>
+  </confs>
+</configurationDescriptor>

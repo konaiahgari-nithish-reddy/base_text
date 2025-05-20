@@ -1,0 +1,484 @@
+// *************************************************************************************************
+//										S e r i a l P o r t . C
+// *************************************************************************************************
+//
+//		Project:	String Monitoring
+//
+//		Contains:	PIC32MX360F512L MCU Serial Port initialization functions
+
+//
+// *************************************************************************************************
+
+// These functions are NOT register level. They call into the PIC32 Peripheral library to
+// handle most register access, especially initialization
+
+// See PIC32 Family Reference Manual, Sect. 21 UART 61107G.pdf for details of serial async setup and operation
+
+#ifndef __32MX360F512L__
+	#error	Incorrect Processor Type Selected; code is for PIC32MX360F512L
+#endif
+
+//-----------------------------------------------------------------------------
+//								#include files
+//-----------------------------------------------------------------------------
+#include "config.h"				// compile time configuration definitions
+
+//lint -e765					error 765: (Info -- external function could be made static)
+//lint -e14						error 14: (Error -- Symbol 'foo' previously defined (line moo, file yoo.c, module goo.c))
+#include <plib.h>						// Microchip PIC32 peripheral library main header
+//lint +e14
+
+#include "HardwareProfile.h"
+
+#include "gsfstd.h"						// gsf standard #defines
+#include "Debug.h"
+#include "SmartTrak.h"					// Project wide definitions
+#include "SerialPort.h"
+#include "EventFlags.h"					// event flag definitions and globals
+//#include "Timer.h"					// for RS-232 timeouts, not currently implemented
+
+#ifdef DEFINE_GLOBALS
+	#error "DEFINE_GLOBALS not expected here"
+#endif
+//-----------------------------------------------------------------------------
+//								Definitions
+//-----------------------------------------------------------------------------
+
+enum tagSerialFSMErrors
+{
+	SER_FSM_ERROR_NONE = SER_FSM_ERROR_BASE,
+	SER_FSM_ERROR_UNEXPECTED_TICK,			// 1 unexpected timer tick event
+	SER_FSM_ERROR_UNEXPECTED_EVENT,			// 2 unexpected timer tick event
+	SER_FSM_ERROR_INVALID_STATE,			// 3 not a valid state
+	SER_FSM_ERROR_INVALID_SUBSTATE,			// 4 not a valid state
+	SER_FSM_ERROR_UNEXPECTED_RX_INT,		// 5
+	SER_FSM_ERROR_UNEXPECTED_TX_INT,		// 6
+	SER_FSM_ERROR_TRANSMIT_TIMEOUT,			// 7
+	SER_FSM_ERROR_NO_TX_DATA_AVAILABLE,		// 8 no packet data available
+	SER_FSM_ERROR_NO_RX_DATA_AVAILABLE,		// 8 no packet data available
+	SER_FSM_ERROR_BUFFER_OVERFLOW,			// 9 receive buffer overflow
+	SER_FSM_ERROR_RX_FRAMING_ERROR,			// A low level framing error
+	SER_FSM_ERROR_RX_OVERRUN_ERROR,			// B low level data overrun error
+	SER_FSM_ERROR_TX_BUFFER_FULL,			// C transmit buffer full
+
+	SER_FSM_ERROR_UNPROCESSED_EVENT = SER_FSM_ERROR_BASE + 0x0F		// F
+};
+
+//-----------------------------------------------------------------------------
+//								File Globals
+//-----------------------------------------------------------------------------
+FILE_GLOBAL_INIT	UINT32	fgulCurrentBaudRate = 0;		// keep track of current baud rate setting
+
+
+// *****************************************************************************
+//						Initialize Serial Port
+// *****************************************************************************
+
+void InitializeSerialPort(UART_MODULE UARTid, UINT32 lBaudRate)
+{
+
+	fgulCurrentBaudRate = lBaudRate;			// keep track of current baud rate setting
+
+	// *********************************
+	//		Serial Control
+	// *********************************
+	// This initialization assumes 36MHz Fpb clock.
+	// If it changes, you will have to modify baud rate initializer.
+    UARTConfigure(UARTid, UART_ENABLE_PINS_TX_RX_ONLY);					// note that we are NOT setting high speed mode
+    //UARTSetFifoMode(UARTid, UART_INTERRUPT_ON_TX_NOT_FULL | UART_INTERRUPT_ON_RX_NOT_EMPTY);
+	//UART_INTERRUPT_ON_TX_DONE, UART_INTERRUPT_ON_TX_BUFFER_EMPTY
+    UARTSetFifoMode(UARTid, UART_INTERRUPT_ON_TX_BUFFER_EMPTY | UART_INTERRUPT_ON_RX_NOT_EMPTY);
+    UARTSetLineControl(UARTid, UART_DATA_SIZE_8_BITS | UART_PARITY_NONE | UART_STOP_BITS_1);
+    UARTSetDataRate(UARTid, GetPeripheralClock(), lBaudRate);
+    UARTEnable(UARTid, UART_ENABLE_FLAGS(UART_PERIPHERAL | UART_RX | UART_TX));
+
+	// *********************************
+	//		Interrupt Control
+	// *********************************
+	// Configure UART RX Interrupt
+	INTEnable(INT_SOURCE_UART_RX(UARTid), INT_ENABLED);
+	// Tx Interrupt enabled only when there is data to Tx
+    INTSetVectorPriority(INT_VECTOR_UART(UARTid), INT_PRIORITY_LEVEL_2);
+    INTSetVectorSubPriority(INT_VECTOR_UART(UARTid), INT_SUB_PRIORITY_LEVEL_0);
+
+	// interrupts are enabled by the caller (application main())
+    // enable interrupts INTEnableInterrupts(),  enable device multi-vector interrupts INTEnableSystemMultiVectoredInt()
+
+	// note that we do NOT enable Tx (transmit) interrupts here
+	// TX interrupts should ONLY be enabled when there is data available to transmit
+}
+
+void ChangeSerialBaudRate(UART_MODULE UARTid, UINT32 lBaudRate)
+{
+	if(fgulCurrentBaudRate IS_NOT lBaudRate)		// only change baud rate if there is a rate change!
+	{
+		// disable RX interrupts while changing baud rate
+		INTEnable(INT_SOURCE_UART_RX(UARTid), INT_DISABLED);
+
+		UARTSetDataRate(UARTid, GetPeripheralClock(), lBaudRate);
+		fgulCurrentBaudRate = lBaudRate;			// keep track of current baud rate setting
+
+		UARTEnable(UARTid, UART_ENABLE_FLAGS(UART_PERIPHERAL | UART_RX | UART_TX));
+
+		// enable RX interrupts
+		INTEnable(INT_SOURCE_UART_RX(UARTid), INT_ENABLED);
+	}
+}
+
+
+// *****************************************************************************
+//								Serial Receive
+// *****************************************************************************
+
+// *********************************************************
+//						StartRx
+// *********************************************************
+
+// this is an interrupt driven, NON blocking receive function
+int StartRx(UART_MODULE UARTid)
+	{
+
+	// disable RX interrupts while setting up for RX
+	INTEnable(INT_SOURCE_UART_RX(UARTid), INT_DISABLED);
+
+	// initialize ring buffer indicies
+	ucsRxdInIndex[UARTid] = 0;
+	ucsRxdOutIndex[UARTid] = 0;
+
+	// initialize the start of the receive buffer, so it will not be interpreted as useful!
+	ucsRxdData[UARTid][ucsRxdInIndex[UARTid]] = '\0';
+
+	// read receive register to clear any pending receive interrupts (read clears xxxx)
+
+	// enable RX interrupts
+	INTEnable(INT_SOURCE_UART_RX(UARTid), INT_ENABLED);
+
+	return TRUE;
+	}
+
+
+// *********************************************************
+//					AnyRxDataAvailable
+// *********************************************************
+
+//  indicates if there is data in the serial I/O receive buffer. Does NOT actually remove data.
+//	returns: bYES or bNO
+//	does NOT pull any data from the receive buffer and does NOT change buffer indicies
+
+// ==> is there really any need to disable interrupts here? This function has to be called repeatedly,
+// and the only change that can occur as a result of an interrupt if from NO data to SOME data available..
+
+BOOL AnyRxDataAvailable(UART_MODULE UARTid)
+{
+	BOOL bTemp = bYES;
+
+	// save interrupt state?
+	// disable RX interrupts while checking status
+	INTEnable(INT_SOURCE_UART_RX(UARTid), INT_DISABLED);
+
+	// if the receive IN buffer index is the same as the receive OUT buffer index, there is no new data available
+	if(ucsRxdInIndex[UARTid] IS ucsRxdOutIndex[UARTid])
+		bTemp = bNO;
+
+	// re-enable RX interrupts
+	// ==>> this should only be enabled if the interrupts were enabled upon entry..
+	INTEnable(INT_SOURCE_UART_RX(UARTid), INT_ENABLED);
+
+	return(bTemp);
+}
+
+
+// *********************************************************
+//					Read Rx Data
+// *********************************************************
+
+// returns a single byte of data from the ring buffer, and bumps the read index
+// NOTE: there is no error return, the caller must check AnyRxDataAvailable() becore calling ReadRxdData()
+
+unsigned char ReadRxdData(UART_MODULE UARTid)
+{
+	unsigned char ucTemp;
+
+	// disable RX interrupts while setting reading Rx data
+	INTEnable(INT_SOURCE_UART_RX(UARTid), INT_DISABLED);
+
+	ucTemp = ucsRxdData[UARTid][ucsRxdOutIndex[UARTid]];	// read byte from ring buffer
+
+	if(++ucsRxdOutIndex[UARTid] > MAX_BUFFER_INDEX)		// bump copy of receive buffer OUT index and check for ring buffer wrap
+	    ucsRxdOutIndex[UARTid] = 0;						// reset ring buffer index
+
+	// enable RX interrupts
+	INTEnable(INT_SOURCE_UART_RX(UARTid), INT_ENABLED);
+
+	return(ucTemp);									// return received byte
+}
+
+
+
+// *****************************************************************************
+//								Serial Transmit
+// *****************************************************************************
+
+
+// *********************************************************
+//					IsTransmitComplete
+// *********************************************************
+//  indicates if there is data in the serial I/O transmit buffer.
+//	returns: bYES or bNO
+
+// ==> is there really any need to disable interrupts here? This function has to be called repeatedly,
+// and the only change that can occur as a result of an interrupt if from NO data to SOME data available..
+
+// this function code was derived from the revised RFStamp:interrupt.c code
+
+unsigned char IsTransmitComplete(UART_MODULE UARTid)
+{
+	unsigned char ucTemp = bNO;
+
+	// disable Transmit Interrupts while checking status
+	INTEnable(INT_SOURCE_UART_TX(UARTid), INT_DISABLED);
+
+	// if the Transmit IN buffer index is the same as the Transmit OUT buffer index, all data has been transmitted .. or at least transferred to the MCU FIFO
+	// check the MCU to make sure all data in the TX FIFO has been sent
+	if ((bTxDone[UARTid] IS TRUE) AND (UARTTransmissionHasCompleted(UARTid) IS TRUE))
+		ucTemp = bYES;
+
+	// done, enable Transmit Interrupts
+	INTEnable(INT_SOURCE_UART_TX(UARTid), INT_ENABLED);
+
+	return(ucTemp);
+}
+
+
+
+// *********************************************************
+//				StartTransmitString
+// *********************************************************
+
+// this DOES work, but it is wasteful because the entire string is copied from ROM to RAM
+
+void StartTransmitString(UART_MODULE UARTid, const char *pstrString)
+{
+
+	// disable Transmit Interrupts while setting up transmit string
+	INTEnable(INT_SOURCE_UART_TX(UARTid), INT_DISABLED);
+
+	// set pointer to string to transmit
+	// string is NOT copied to an output buffer, so it must remain intact until it has been transmitted
+	// caller must check for completion by calling IsTransmitComplete() before transmitting another string
+	(pISRTxData[UARTid]) = (char *)pstrString;
+
+	bTxDone[UARTid] = FALSE;								// mark as NOT done
+
+	// write a byte to the TX FIFO, to 'prime' the process
+	UARTSendDataByte(UARTid, *(pISRTxData[UARTid]));		// write data to transmit FIFO
+
+	++(pISRTxData[UARTid]);								// bump data index
+
+	// enable Transmit Interrupts
+	INTEnable(INT_SOURCE_UART_TX(UARTid), INT_ENABLED);
+
+	// wait for the entire string to be transmitted (enabled only for debugging and testing)
+//	while (IsTransmitComplete(UARTid) IS bNO)
+//		;
+
+}
+
+
+// *************************************************************************************************
+//								UART Interrupt Handlers
+// *************************************************************************************************
+
+// forward reference, used here ONLY
+void UARTInterruptHandler(UART_MODULE UARTid);
+
+// this is a very low speed interrupt handler (less than 100 Hz)
+// it is currently called from the high priority interrupt handler (see Interrupt.c)
+// Perhaps it could just be moved to the foreground loop?
+
+// UART 2 interrupt handler
+// it is set at priority level 2
+void __ISR(_UART1_VECTOR, ipl2) IntUart1Handler(void)
+{
+	UARTInterruptHandler(UART1);
+
+}
+
+// UART 2 interrupt handler
+// it is set at priority level 2
+void __ISR(_UART2_VECTOR, ipl2) IntUart2Handler(void)
+{
+	UARTInterruptHandler(UART2);
+
+}
+
+
+
+void UARTInterruptHandler(UART_MODULE UARTid)
+{
+
+	if(INTGetFlag(INT_SOURCE_UART_RX(UARTid)))
+	{
+		// *********************************
+		//		Serial Receive Int
+		// *********************************
+		UART_LINE_STATUS lineStatus;
+
+		// Clear the RX interrupt Flag
+		INTClearFlag(INT_SOURCE_UART_RX(UARTid));
+
+		// Echo what we just received.
+		//PutCharacter(UARTGetDataByte(UARTid));
+
+		// Toggle LED to indicate UART activity
+		//mPORTAToggleBits(BIT_7);
+
+		// check for receive error(s)
+		lineStatus = UARTGetLineStatus(UARTid);					// get line status to check for errors
+
+		if(lineStatus & UART_FRAMING_ERROR)						// check for Framing errors
+		{
+			RuntimeError(SER_FSM_ERROR_RX_FRAMING_ERROR);
+			// FERR bit will be cleared when RCREG1 is read below
+		}
+
+		if(lineStatus & UART_OVERRUN_ERROR)						// check for Overrun errors
+		{
+			RuntimeError(SER_FSM_ERROR_RX_OVERRUN_ERROR);
+			//RCSTAbits.CREN = 0;								// clear OERR bit
+			//RCSTAbits.CREN = 1;								// re-enable receiver
+		}
+
+		// we are not using parity, so we cannot check for parity errors
+
+		// copy a single byte from the Serial Receive REGISTER to the Rx ring buffer
+		if (UARTReceivedDataIsAvailable(UARTid))
+		{
+			ucsRxdData[UARTid][ucsRxdInIndex[UARTid]] = UARTGetDataByte(UARTid);	// read Rx register into Rx ring buffer
+		}
+		else
+		{
+			RuntimeError(SER_FSM_ERROR_NO_RX_DATA_AVAILABLE);
+		}
+		// bump Rx ring buffer IN index, and check for Rx ring buffer wrap
+		if(++ucsRxdInIndex[UARTid] > MAX_BUFFER_INDEX)
+		{
+			ucsRxdInIndex[UARTid] = 0;						// wrap Rx ring buffer IN index
+		}
+	}
+
+
+	if ( INTGetFlag(INT_SOURCE_UART_TX(UARTid)) )
+	{
+		// *********************************
+		//		Serial Transmit Int
+		// *********************************
+		INTClearFlag(INT_SOURCE_UART_TX(UARTid));						// clear the calling flag
+
+		if (UARTTransmitterIsReady(UARTid))								// check for Transmit FIFO empty, TRUE == able to accept data
+		////if (( PIR1bits.TX1IF == 1) AND (PIE1bits.TX1IE == 1))		// interrupt source TXIF AND Transmit Register Empty Interrupt Enabled? Transmit register EMPTY
+		{
+			// check for already done with serial transmit
+			if (bTxDone[UARTid] IS TRUE)
+			{
+				// we have already written the last byte to the transmit register, but it may NOT have been fully transmitted YET
+				if (UARTTransmissionHasCompleted(UARTid) IS TRUE)
+				{
+					// the transmit FIFO is empty, so we should not be here
+//					RuntimeError(SER_FSM_ERROR_UNEXPECTED_TX_INT);
+
+					// here we have a bit of a conundrum.. we would like to clear the calling flag PIR1bits.TX1IF, which is done by writing to TXREG1.
+					// but writing to TXREG1 means there is ANOTHER byte to transmit, which will result in yet another interrupt..
+					// and clearing PIE1bits.TX1IE = 0  does NOT appear to prevent the interrupt from being handled!
+					//TXREG1 = 'w';								// write data to transmit register ONLY to clear calling interrupt bit PIR1bits.TX1IF
+				}
+
+				// disable Transmit Interrupts (should be redundant at this point)
+				INTEnable(INT_SOURCE_UART_TX(UARTid), INT_DISABLED);
+			}
+			else			// if there is still a character in the transmit register, we are not done transmitting the last character of the string
+			{
+				// previous interrupt was NOT the last byte of the string
+				// check for string overrun
+                            if(TXMode[UARTid] IS 0)
+                            {
+				if (*(pISRTxData[UARTid]) IS '\0')					// check for end of string
+				{
+					// we should never get a 0 byte at this point
+					RuntimeError(SER_FSM_ERROR_NO_TX_DATA_AVAILABLE);
+					bTxDone[UARTid] = TRUE;
+
+					// disable Transmit Interrupts
+					INTEnable(INT_SOURCE_UART_TX(UARTid), INT_DISABLED);
+
+					//TXREG = 'y';							// write data to transmit register ONLY to clear calling interrupt bit PIR1bits.TX1IF
+				}
+				else
+				{
+					// write data to transmit register
+					//while (UARTTransmitterIsReady(UARTid))
+					//{
+					//	UARTSendData(UARTid, data);
+					//}
+
+					UARTSendDataByte(UARTid, *(pISRTxData[UARTid]));		// write data to transmit FIFO
+
+					++(pISRTxData[UARTid]);								// bump data pointer
+
+					// check for end of string
+					if (*(pISRTxData[UARTid]) IS '\0')
+					{
+						// we have reached the end of the string
+						bTxDone[UARTid] = TRUE;
+						// disable Transmit Interrupts
+						INTEnable(INT_SOURCE_UART_TX(UARTid), INT_DISABLED);
+					}
+				}
+                            }
+                            else
+                            {
+                                if (TXLen[UARTid] IS SetTXLen[UARTid])					// check for end of string
+				{
+					// we should never get a 0 byte at this point
+					RuntimeError(SER_FSM_ERROR_NO_TX_DATA_AVAILABLE);
+					bTxDone[UARTid] = TRUE;
+
+					// disable Transmit Interrupts
+					INTEnable(INT_SOURCE_UART_TX(UARTid), INT_DISABLED);
+
+					//TXREG = 'y';							// write data to transmit register ONLY to clear calling interrupt bit PIR1bits.TX1IF
+				}
+				else
+				{
+					// write data to transmit register
+					//while (UARTTransmitterIsReady(UARTid))
+					//{
+					//	UARTSendData(UARTid, data);
+					//}
+
+					UARTSendDataByte(UARTid, *(pISRTxData[UARTid]));		// write data to transmit FIFO
+
+					++(pISRTxData[UARTid]);								// bump data pointer
+                                        ++TXLen[UARTid];
+					// check for end of string
+					if (TXLen[UARTid] IS SetTXLen[UARTid])
+					{
+						// we have reached the end of the string
+						bTxDone[UARTid] = TRUE;
+						// disable Transmit Interrupts
+						INTEnable(INT_SOURCE_UART_TX(UARTid), INT_DISABLED);
+                                                TXLen[UARTid] = 0;
+					}
+				}
+                            }
+
+			}		// end if NOT (bTxDone[UARTid] IS TRUE)
+
+		}		// end if (UARTTransmitterIsReady(UARTid))
+
+	}		// end if ( INTGetFlag(INT_SOURCE_UART_TX(UARTid)) )
+}
+
+
+// end of SerialPort.c
+

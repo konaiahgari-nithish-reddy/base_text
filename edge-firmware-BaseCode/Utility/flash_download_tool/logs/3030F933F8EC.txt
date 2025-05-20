@@ -1,0 +1,22 @@
+*************************** START ****************************
+START TIME: 202406251630
+CONNECT BAUD: 115200
+set state: ESP_DL_SYNC
+serial port opened
+-----------
+baud:115200
+root baud:115200
+-------------
+===============BAUD : 115200===============CALL DEVICE SYNC
+connecting...
+mac l: 0xf933f8ec
+mac h: 0x3030
+get mac res: 1
+get flash id : 0x001740c8
+manufacturer_id: 0xc8
+device_id: 0x4017
+com closed
+Use time: 4 s
+Download result: PASS
+*************************** END ****************************
+

@@ -1,0 +1,6 @@
+PC-lint for C/C++ (NT) Vers. 9.00h, Copyright Gimpel Software 1985-2011
+
+
+project.lnt(128): error 305: (Error -- Unable to open module 'Files\Microchip\xc32\v1.20\pic32mx\include -iC:\Program')
+
+Tool returned code: 2

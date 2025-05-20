@@ -1,0 +1,574 @@
+// *************************************************************************************************
+//										I 2 C B u s . C
+// *************************************************************************************************
+//
+//		Project:	SmartTrak Solar Panel Controller
+//
+//		Contains:	I2C Bus Functions
+//
+//		001	19 Apr 13 <sek> created from Microchip i2c_master.c
+//		002	21 Apr 13 <sek> moved I2CStop() inside loop in StopTransfer()
+//		003 07 May 13 <sek> moved write_i2c_device(), read_i2c_device() here from DS3232.c
+//		004    May 13 <sek> commented out DBPRINTF() messages
+//		005 02 Jun 13 <sek> commented out DBINIT(), call I2CConfigure()
+//
+//		AUTHOR:	    Steve Kranish	skranish@verizon.net
+//					gsf Engineering	978-927-7189
+//					Beverly, MA 01915
+//
+//		copyright (c) 2013 gsf Engineering
+//
+// *************************************************************************************************
+/******************************************************************************
+ *
+ * Demo Code Description:
+ * This demo code excersize the i2c channel 1 by interfacing
+ * to 24LC256 serial eeprom.  The code writes to a location
+ * and then verify the contents of the eeprom.  I2C Channel 1
+ * is hooked up to 24LC256.  Address lines of the eeprom are
+ * all tied to Vss.
+ ********************************************************************/
+#ifndef __32MX360F512L__
+	#error	Incorrect Processor Type Selected; code is for PIC32MX360F512L
+#endif
+
+//-----------------------------------------------------------------------------
+//								#include files
+//-----------------------------------------------------------------------------
+#include <GenericTypeDefs.h>
+#include "config.h"					// compile time configuration definitions
+
+//lint -e765						error 765: (Info -- external function could be made static)
+//lint -e14							error 14: (Error -- Symbol 'foo' previously defined (line moo, file yoo.c, module goo.c))
+#include <plib.h>					// Microchip PIC32 peripheral library main header
+//lint +e14
+
+#include "HardwareProfile.h"
+
+#include "I2C.h"
+
+
+#ifdef PIC32_STARTER_KIT
+    #include <stdio.h>
+#endif
+
+
+// Configuration Bit settings
+//
+// SYSCLK = 80 MHz (8MHz Crystal/ FPLLIDIV * FPLLMUL / FPLLODIV)
+// PBCLK = 80 MHz
+// WDT OFF
+#ifdef OVERRIDE_CONFIG_BITS
+	// these configuration bits were set differntly
+	// of particular note is that we are running PBCLK = 40MHz
+	#pragma config FPBDIV   = DIV_1         // Peripheral Clock divisor
+	#pragma config FSOSCEN  = OFF           // Secondary Oscillator Enable
+	#pragma config FCKSM    = CSDCMD        // Clock Switching & Fail Safe Clock Monitor
+	#pragma config OSCIOFNC = OFF           // CLKO Enable
+	#pragma config POSCMOD  = HS            // Primary Oscillator
+#endif // OVERRIDE_CONFIG_BITS
+
+
+// ****************************************************************************
+// ****************************************************************************
+// Local Support Routines
+// ****************************************************************************
+// ****************************************************************************
+
+BOOL InitializeI2CBus(void)
+{
+
+    UINT32              actualClock;
+
+    BOOL                Success = TRUE;
+    UINT8               i2cbyte;
+
+    // Initialize debug messages (when supported)
+    //DBINIT();
+
+	// set I2C bus configuration (needed? added 2 Jun 13)
+	I2CConfigure(DS3232_I2C_BUS, I2C_ENABLE_SLAVE_CLOCK_STRETCHING|I2C_ENABLE_HIGH_SPEED);
+
+    // Set the I2C baudrate
+    actualClock = I2CSetFrequency(DS3232_I2C_BUS, GetPeripheralClock(), I2C_CLOCK_FREQ);
+
+    if ( abs(actualClock-I2C_CLOCK_FREQ) > I2C_CLOCK_FREQ/10 )
+    {
+////        DBPRINTF("Error: I2C1 clock frequency (%u) error exceeds 10%%.\n", (unsigned)actualClock);
+		return FALSE;
+    }
+
+    // Enable the I2C bus
+//    I2CEnable(DS3232_I2C_BUS, TRUE);
+
+	return TRUE;
+}
+
+
+/*******************************************************************************
+  Function:
+    BOOL StartTransfer( BOOL restart )
+
+  Summary:
+    Starts (or restarts) a transfer to/from the EEPROM.
+
+  Description:
+    This routine starts (or restarts) a transfer to/from the EEPROM, waiting (in
+    a blocking loop) until the start (or re-start) condition has completed.
+
+  Precondition:
+    The I2C module must have been initialized.
+
+  Parameters:
+    restart - If FALSE, send a "Start" condition
+            - If TRUE, send a "Restart" condition
+    
+  Returns:
+    TRUE    - If successful
+    FALSE   - If a collision occured during Start signaling
+    
+  Example:
+    <code>
+    StartTransfer(FALSE);
+    </code>
+
+  Remarks:
+    This is a blocking routine that waits for the bus to be idle and the Start
+    (or Restart) signal to complete.
+  *****************************************************************************/
+
+BOOL StartTransfer( BOOL restart )
+{
+    I2C_STATUS  status;
+
+    // Send the Start (or Restart) signal
+    if(restart)
+    {
+		// repeat start is used within an I2C packet transfer
+        I2CRepeatStart(DS3232_I2C_BUS);
+    }
+    else
+    {
+        // Wait for the bus to be idle, then start the transfer
+        while( !I2CBusIsIdle(DS3232_I2C_BUS) )
+			;
+
+        if(I2CStart(DS3232_I2C_BUS) != I2C_SUCCESS)
+        {
+////            DBPRINTF("Error: Bus collision during transfer Start\n");
+            return FALSE;
+        }
+    }
+
+    // Wait for the signal to complete
+    do
+    {
+        status = I2CGetStatus(DS3232_I2C_BUS);
+
+    } while ( !(status & I2C_START) );				// BLOCKING_WAIT
+
+    return TRUE;
+}
+
+
+/*******************************************************************************
+  Function:
+    BOOL TransmitOneByte( UINT8 data )
+
+  Summary:
+    This transmits one byte to the EEPROM.
+
+  Description:
+    This transmits one byte to the EEPROM, and reports errors for any bus
+    collisions.
+
+  Precondition:
+    The transfer must have been previously started.
+
+  Parameters:
+    data    - Data byte to transmit
+
+  Returns:
+    TRUE    - Data was sent successfully
+    FALSE   - A bus collision occured
+
+  Example:
+    <code>
+    TransmitOneByte(0xAA);
+    </code>
+
+  Remarks:
+    This is a blocking routine that waits for the transmission to complete.
+  *****************************************************************************/
+
+BOOL TransmitOneByte( UINT8 data )
+{
+    // Wait for the transmitter to be ready
+    while(!I2CTransmitterIsReady(DS3232_I2C_BUS))
+		;													// BLOCKING_WAIT
+
+    // Transmit the byte
+    if(I2CSendByte(DS3232_I2C_BUS, data) == I2C_MASTER_BUS_COLLISION)
+    {
+////        DBPRINTF("Error: I2C Master Bus Collision\n");
+        return FALSE;
+    }
+
+    // Wait for the transmission to finish
+    while(!I2CTransmissionHasCompleted(DS3232_I2C_BUS))
+		;													// BLOCKING_WAIT
+
+    return TRUE;
+}
+
+/*
+if (I2CReceivedDataIsAvailable(I2C1))
+{
+    I2CAcknowledgeByte(I2C1, TRUE);
+    data = I2CGetByte(I2C1);
+}
+*/
+
+/*******************************************************************************
+  Function:
+    void StopTransfer( void )
+
+  Summary:
+    Stops a transfer to/from the EEPROM.
+
+  Description:
+    This routine Stops a transfer to/from the EEPROM, waiting (in a 
+    blocking loop) until the Stop condition has completed.
+
+  Precondition:
+    The I2C module must have been initialized & a transfer started.
+
+  Parameters:
+    None.
+    
+  Returns:
+    None.
+    
+  Example:
+    <code>
+    StopTransfer();
+    </code>
+
+  Remarks:
+    This is a blocking routine that waits for the Stop signal to complete.
+  *****************************************************************************/
+
+void StopTransfer( void )
+{
+    I2C_STATUS  status;
+
+	#ifdef USE_I2C_STOP_TRIGGER
+		Trigger1Level(1);									// trigger to allow viewing this event on a scope
+	#endif
+
+	I2CClearStatus(DS3232_I2C_BUS, I2C_STOP);
+
+	// Send the Stop signal
+	I2CStop(DS3232_I2C_BUS);							// I2CStop() moved INTO the loop; outside the loop does not always work
+
+    // Wait for the signal to complete
+    do
+    {
+//		I2CClearStatus(DS3232_I2C_BUS, I2C_STOP);
+
+		// Send the Stop signal
+//	    I2CStop(DS3232_I2C_BUS);							// I2CStop() moved INTO the loop; outside the loop does not always work
+
+		status = I2CGetStatus(DS3232_I2C_BUS);
+
+    } while ( !(status & I2C_STOP) );						// BLOCKING_WAIT
+
+	#ifdef USE_I2C_STOP_TRIGGER
+		Trigger1Level(0);									// trigger to allow viewing this event on a scope
+	#endif
+
+}
+
+
+void FinalStopTransfer( void )
+{
+    I2C_STATUS  status;
+
+	#ifdef USE_I2C_STOP_TRIGGER
+		Trigger1Level(1);									// trigger to allow viewing this event on a scope
+	#endif
+
+	I2CClearStatus(DS3232_I2C_BUS, I2C_STOP);
+
+	// Send the Stop signal
+	I2CStop(DS3232_I2C_BUS);							// I2CStop() moved INTO the loop; outside the loop does not always work
+
+    // Wait for the signal to complete
+  //  do
+  //  {
+
+		status = I2CGetStatus(DS3232_I2C_BUS);
+
+//    } while ( !(status & I2C_STOP) );						// BLOCKING_WAIT
+
+	#ifdef USE_I2C_STOP_TRIGGER
+		Trigger1Level(0);									// trigger to allow viewing this event on a scope
+	#endif
+
+}
+
+
+
+
+// This is structured as a generic I2C device write. The DS3232 register is simply the first data byte AFTER the device address
+BOOL write_i2c_device(UINT8 cDeviceI2CAddress, UINT8 cSubAddress, UINT8 *ptrData, UINT8 cDataLen)
+{
+    UINT8               i2cData[256];				// much larger than needed for any current devices...
+    I2C_7_BIT_ADDRESS   SlaveAddress;
+    int                 Index;
+    int                 DataSz;
+    BOOL                Acknowledged;
+    BOOL                Success = TRUE;
+    UINT8               i2cbyte;
+	int					i;
+
+    //
+    // Send the data to I2C Device
+    //
+
+    // Initialize the data buffer
+	// create a properly formatted Slave Device Address + R/W byte.
+	// I2C_FORMAT_7_BIT_ADDRESS() shifts the SlaveAddress LEFT one bit, so there is room for the R/W bit in the LSB
+    I2C_FORMAT_7_BIT_ADDRESS(SlaveAddress, cDeviceI2CAddress, I2C_WRITE);
+    i2cData[0] = SlaveAddress.byte;
+
+	// format the rest of the data
+    i2cData[1] = cSubAddress;		// secondary address, generally the address of register to be written
+
+	// place data in the buffer AFTER the Device I2C address and subAddress
+	for (i = 2; i < (cDataLen + 2); i++)
+	{
+	   i2cData[i] = *ptrData;		// data to be written
+	   ++ptrData;					// bump data pointer
+	}
+
+	// set data length, INCLUDING the device address
+    DataSz = cDataLen + 2;
+
+    // Start the transfer to write data
+    if( !StartTransfer(FALSE) )
+    {
+        return FALSE;						// error exit
+    }
+
+    // Transmit all data
+    Index = 0;
+    while( Success && (Index < DataSz) )
+    {
+        // Transmit a byte
+        if (TransmitOneByte(i2cData[Index]))
+        {
+            // Advance to the next byte
+            Index++;
+
+            // Verify that the byte was acknowledged, EACH byte must be acknowledged
+            if(!I2CByteWasAcknowledged(DS3232_I2C_BUS))
+            {
+////                DBPRINTF("Error: Sent byte was not acknowledged\n");
+                Success = FALSE;
+            }
+        }
+        else
+        {
+            Success = FALSE;
+        }
+    }
+
+    // End the transfer
+	// if data transfer was not successful, we still need to put the bus into a known state
+    StopTransfer();							// no error check in StopTransfer(), although it is capable of hanging the system...
+
+    if(!Success)
+    {
+        return FALSE;						// error exit
+    }
+
+#ifdef NOTDEF		// according to the PCA9554 specs, this is not necessary.
+
+    // Wait for I2C Device to complete write process, by polling the ack status.
+	// this could be a LONG time for an EEPROM; likely to be short for other devices
+	// This is actually ANOTHER write attempt, but there is no data sent, just the I2C Address + R/W bit
+    Acknowledged = FALSE;
+    do
+    {
+        // Start the transfer to address the EEPROM
+        if( !StartTransfer(FALSE) )
+        {
+	        return FALSE;					// error exit
+        }
+
+        // Transmit just the EEPROM's address
+        if (TransmitOneByte(SlaveAddress.byte))		// transmit I2C Address + R/W bit, NO additional data
+        {
+            // Check to see if the byte was acknowledged
+            Acknowledged = I2CByteWasAcknowledged(DS3232_I2C_BUS);
+        }
+        else
+        {
+            Success = FALSE;
+        }
+
+        // End the transfer (stop here if an error occured)
+        StopTransfer();
+
+        if(!Success)
+        {
+	        return FALSE;					// error exit
+        }
+
+    } while (Acknowledged != TRUE);
+
+#endif
+
+
+	return TRUE;
+}
+
+BOOL read_i2c_device(UINT8 cDeviceI2CAddress, UINT8 cSubAddress, UINT8 *ptrData, UINT8 cDataLen)
+{
+
+    UINT8               i2cData[10];
+    I2C_7_BIT_ADDRESS   SlaveAddress;
+    int                 Index;
+    int                 DataSz;
+    BOOL                Acknowledged;
+    BOOL                Success = TRUE;
+	UINT8				cDataToRead = cDataLen;		// number of data bytes to read
+
+    //
+    // Read the data back from the I2C Device
+    //
+
+    // Initialize the data buffer
+	// create a properly formatted Slave Device Address + R/W byte.
+	// I2C_FORMAT_7_BIT_ADDRESS() shifts the SlaveAddress LEFT one bit, so there is room for the R/W bit in the LSB
+    I2C_FORMAT_7_BIT_ADDRESS(SlaveAddress, cDeviceI2CAddress, I2C_WRITE);
+    i2cData[0] = SlaveAddress.byte;
+
+	// format the rest of the data to be written
+    i2cData[1] = cSubAddress;              // SRAM address to read
+    DataSz = 2;
+
+    // Start the transfer
+    if( !StartTransfer(FALSE) )
+    {
+        return FALSE;						// error exit
+    }
+
+    // Transmit I2C device address, Sub address (2 bytes)
+    Index = 0;								// init data index
+    while( Success & (Index < DataSz) )
+    {
+        // Transmit a byte
+        if (TransmitOneByte(i2cData[Index]))
+        {
+            // Advance to the next byte
+            Index++;
+        }
+        else
+        {
+            Success = FALSE;
+        }
+
+        // Verify that the byte was acknowledged
+        if(!I2CByteWasAcknowledged(DS3232_I2C_BUS))
+        {
+////            DBPRINTF("Error: Sent byte was not acknowledged\n");
+            Success = FALSE;
+        }
+    }
+
+    // Restart and send the device I2C address to switch to a read transfer
+    if(Success)
+    {
+        // Send a Repeated Start condition
+        if( !StartTransfer(TRUE) )
+        {
+        return FALSE;						// error exit
+        }
+
+        // Transmit the I2C Device address with the READ bit set
+        I2C_FORMAT_7_BIT_ADDRESS(SlaveAddress, cDeviceI2CAddress, I2C_READ);
+        if (TransmitOneByte(SlaveAddress.byte))
+        {
+            // Verify that the byte was acknowledged
+            if(!I2CByteWasAcknowledged(DS3232_I2C_BUS))				// returns TRUE if byte is acknowledged
+            {
+////                DBPRINTF("Error: Sent byte was not acknowledged\n");
+                Success = FALSE;
+            }
+        }
+        else
+        {
+            Success = FALSE;
+        }
+    }
+
+
+	if(I2CReceiverEnable(DS3232_I2C_BUS, TRUE) == I2C_RECEIVE_OVERFLOW)
+	{
+////		DBPRINTF("Error: I2C Receive Overflow\n");
+		Success = FALSE;
+	}
+
+//	cDataToRead = 2;				// kludge to force 2 reads
+
+    // Read the data from the desired address
+    while( Success && (cDataToRead != 0) )
+    {
+		// identify if the most recent byte received was an address byte or a data byte
+		while(!I2CReceivedDataIsAvailable(DS3232_I2C_BUS))		// wait for available data, returns FALSE if received byte is data
+			;													// BLOCKING_WAIT
+
+		// read one byte of data; at this point the data is read from the MCU I2C Recieve Register
+		*ptrData = I2CGetByte(DS3232_I2C_BUS);					// read back ONE byte
+
+		--cDataToRead;											// decrement count of data left to read
+
+		if (cDataToRead > 0)
+		{
+			I2CAcknowledgeByte(DS3232_I2C_BUS, TRUE);			// acknowlege received data byte, positive ACK indicates more data to be read
+		}
+		else
+		{
+			// send a NACK, to indicate this will be the last byte read
+			I2CAcknowledgeByte(DS3232_I2C_BUS, FALSE);			// NOT acknowlege received data byte to end transfer
+		}
+
+		// read one byte of data; at this point the data is read from the MCU I2C Recieve Register
+////		*ptrData = I2CGetByte(DS3232_I2C_BUS);					// read back ONE byte
+
+////		++ptrData;												// bump returned data pointer for next byte (if any)
+    }
+
+	#ifdef USE_I2C_STOP_AFTER_READ_TRIGGER
+		Trigger1Level(1);									// trigger to allow viewing this event on a scope
+	#endif
+
+	FinalStopTransfer();
+    //StopTransfer();
+
+	#ifdef USE_I2C_STOP_AFTER_READ_TRIGGER
+		Trigger1Level(0);									// trigger to allow viewing this event on a scope
+	#endif
+
+    if(!Success)
+    {
+        return FALSE;						// error exit
+    }
+
+	return TRUE;
+
+}
+
+// end of I2CBus.c

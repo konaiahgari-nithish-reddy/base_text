@@ -1,0 +1,296 @@
+//---------------------------------------------------------
+//	PC-Lint file for SmartTrak Solar Tracker (all implementations)
+//	using the Microchip PIC32MX360F512L
+//---------------------------------------------------------
+// to execute from within MS VC++:
+
+// {Tools}{Customize}
+
+// Command:
+// C:\Program Files\Lint8\lint-nt.exe
+
+// Arguments:
+// -i"$(FileDir)" "nemesis.lnt" "project.lnt"
+
+// Initial Directory:
+// $(WkspDir)
+
+// Select "Use Output Window"
+
+// NOTE: Nemesis.lnt provides local include directories for Nemesis laptop
+// An alternate file must be used when accessing the project on another host or across a network
+
+//----------------------------------------
+// 		PIC32MX360F512L MCU Definition
+//----------------------------------------
+
+// processor definition, usually done internally by MPLAB
+-d__32MX360F512L__
+-d__PIC32MX__
+-d__XC32
+-d__C32_VERSION__
+
+//-d__DEBUG
+
+//----------------------------------------
+// 	PIC32MX Data types
+//----------------------------------------
+
+// PIC32MX stores data LITTLE Endian, LSB at lowest address
+
+
+// Data type			Size	Range			Alignment (?)
+// char,signed char		8 bits	-128 to 127		1
+// unsigned char		8 bits	0 to 255		1
+// signed short			16 bits -32768 to 32767 not specified?
+// unsigned short		16 bits 0 to 65535		not specified?
+// signed int, long		32 bits -2.1E9 to 2.1E9	not specified?
+// unsigned int, long	32 bits 0 to 4.2E9		not specified?
+// long long			64 bits
+
+// ==>needs to be verified
+// bool					8 bits	0 to 1			1					implied data type
+-sbo1				// bool is 2 bytes (?)
+// enum
+
+
+// Microchip XC32 data sizes
+-sc1				// char is 1 byte
+-ss2				// short is 2 bytes 
+-si4				// int is 4 bytes 
+-sl4				// long is 4 bytes
+
+// Floats
+-sf4				// float is 4 bytes
+-sd4				// double is the same as float unless long double is specified
+-sp4				// pointers are 4 bytes
+
+// Pointer sizes 
+-sp4				// size of all pointers is 4 bytes
+
++fbo				// Boolean flag  - keywords bool, true, and false are activated at the start of every C++ module
+
++fie				// Integer model for Enum flag 
+
+// missing types, normally provided by the compiler
+-d__PTRDIFF_TYPE__="int"						/* result type of pointer difference */
+-d__SIZE_TYPE__="unsigned short"				/* type yielded by sizeof */
+-d__WCHAR_TYPE__="unsigned char"				/* wide char type */
+
++fwu	// wchar_t is Unsigned flag
++fzu	// sizeof-is-Unsigned flag
++fan	// ANonymous union flag, used extensively in Microchip header, suppresses error 658: (Warning -- Anonymous union assumed (use flag +fan))
++fas	// Anonymous struct flag, used extensively in Microchip header
+
+-wlib(1)	// syntax errors only in library files
+
+//----------------------------------------
+// 		Project Definition
+//----------------------------------------
+
+// Compile time #defines
+
+-d_lint
+-d_HOSTED			// see stdio.h line 133
+
+-dUSE_PCA9554_IO
+-dUSE_DS3232_RTCC
+-dMOTION_ERROR_TABLE
+-dUSE_ELEVATION_LINEAR_DRIVE
+//-dUSE_ELEVATION_SLEW_DRIVE
+
+//----------------------------------------
+// 		General Options
+//----------------------------------------
+
+-i"C:\Program Files\PC-Lint 9.0\lnt"
+
+
++v					// be verbose
+//-vf					// display all headers as included (useful for debugging #include paths)
+//+vo				// display options
+-elib(????)			// do not flag errors in library files (disable to figure out setup problems, such as non-standard type modifiers)
+					// this makes the stddef.h size_t, ptrdiff_t, wchar_t errors that we struggled with above.. go away
+
+env-vc6.lnt			// Visual C++ environment options - needed to decode output window
+
+-hs					// blank line after each message  - not good for laptops!
+
+co-pic30.lnt		// Gimpel supplied dsPIC lnt file
+
+//----------------------------------------
+// 	Project Include Paths
+//----------------------------------------
+// additional include paths are relative to the PROJECT directory, which in this case is above all of the firmware
+
+-i"F:\Smarttrak\Microchip_PIC32MX\SmartTrak_2_Axis_Controller"
+-i"F:\Smarttrak\Microchip_PIC32MX\SmartTrak_2_Axis_Controller\BSP"
+-i"F:\Smarttrak\Microchip_PIC32MX\SmartTrak_2_Axis_Controller\source"
+-i"F:\Smarttrak\Microchip_PIC32MX\SmartTrak_2_Axis_Controller\Include"		// do NOT treat as include path, to prevent treating header files as library files??
+-i"F:\Smarttrak\Microchip_PIC32MX\SmartTrak_2_Axis_Controller\Include\BSP"
+
+//-i"F:\Smarttrak\Microchip_PIC32MX\xc32\v1.20\pic32mx\include\peripheral
+
+//----------------------------------------
+// 	Compiler Include Paths
+//----------------------------------------
+
+-i"F:\Smarttrak\Microchip_PIC32MX\xc32\v1.20\pic32mx\include"
+-i"F:\Smarttrak\Microchip_PIC32MX\xc32\v1.20\pic32mx\include\peripheral"
+
+
+
+//----------------------------------------
+//	implied or hidden #defines
+//----------------------------------------
+
+//-dsomething
+
+//----------------------------------------
+// #defines to keep PC-Lint happy or quiet
+//----------------------------------------
+
+// bizarre construct required to ignore __asm__ contstructs (+rw(__asm__) does NOT work!) 
+//+rw(_to_semi) 
+//-d__asm__=_to_semi
+
+
+// PC-Lint does not know what to do with ISRs
+//-d_ISR=
+
+// slightly bizarre constructs required to get Lint to ignore initialization bits and other register definitions
+//-d__attribute__(x)=
+//-dsection(x)=
+//-dspace(x)=
+//-d__extension__=
+
+
+// force PC-Lint to treat some headers as library files, so it does not complain about unused macros, enums, and #defines
+//+libh(gsfstd.h)
++libh(GenericTypeDefs.h)
++libh(P32MX360F512L.h)
+
++libh(F:\Smarttrak\Microchip_PIC32MX\xc32\v1.20\pic32mx\include\*.h)
++libh(F:\Smarttrak\Microchip_PIC32MX\xc32\v1.20\pic32mx\include\peripheral\*.h)
+
+
+//----------------------------------------
+// 	PC-Lint	Error Suppression
+//----------------------------------------
+-e40				// error 40: (Error -- Undeclared identifier 'FOO')  these refer to register names
+
+//\-e43				// p33FJ128GP804.h(many): error 43: (Error -- Vacuous type for variable 'fooBITS::1')
+
+//  the following functions have their return value typically ignored.
+//  add or subtract from this list as desired.
+-esym(534,strcpy,strcat,printf)
+
+-e539				// error 539: (Warning -- Did not expect positive indentation from line foo) (these are primarily indented #ifdef constructs)
+
+// general gsf error suppression
+// -e552 suppresses complaints about registers being written but never read, which is perfectly valid
+-e552				// error 552: (Warning -- Symbol 'FOO' (line boo, file moo.c, module goo.c) not accessed)
+
+-e641				// (Warning -- Converting enum 'FOO' to 'int')
+					// related: fie Integer model for Enum flag (default OFF).
+
+//-e659				// error 659: (Warning -- Nothing follows '}' on line within struct/union/enum declaration)
+
+//-e765				// Info 765: external function 'blah' (line foo, file moo.cpp) could be made static
+
+//-e685				// error 685: (Warning -- Relational operator '>=' always evaluates to 'true')
+
+//\\-e714				// error 714: (Info -- Symbol 'foo' (line moo) not referenced) (these are unreferenced macros, and there are LOTS of these)
+					// turning OFF error 714 also prevents errors about unreferenced global variables and functions...
+					// ==> it is useful to allow 714 errors for this purpose
+
+
+-e749				// error 749: (Info -- local enumeration constant 'foo' (line moo, file yoo.c) not referenced)  not all enums get used
+-e750				// error 750: (Info -- local macro 'foo' (line goo, file you.c) not referenced)
+-e751				// error 751: (Info -- local typedef 'foo' (line goo, file you.c) not referenced)
+
+-esym(755, *)		// p33FJ128GP804.h(many): error 755: (Info -- global macro '_foo' (line goo, file p33FJ128GP804.h) not referenced)
+
+-e756				// error 756: (Info -- global typedef 'FOO' (line moo, file foo) not referenced)
+//-e757				// p33FJ128GP804.h(many): error 757: (Info -- global declarator 'foo' (line moo, file p33FJ128GP804.h) not referenced)
+//-e768				// p33FJ128GP804.h(many): error 768: (Info -- global struct member 'foo' (line moo, file p33FJ128GP804.h) not referenced)
+
+-e769				// error 769: (Info -- global enumeration constant 'foo' (line moo, file yoo.h) not referenced, not all enums get used
+
+-e759				// error 759: (Info -- header declaration for symbol 'foo(void)' defined at (line moo, file yoo.c) could be moved from header to module)
+
+-e793				// error 793: (Info -- ANSI/ISO limit of 31 'significant characters in an external identifier' exceeded -- processing is unaffected)
+
+//-e801				// error 801: (Info -- Use of goto is deprecated)
+
+-e818				// error 818: (Info -- Pointer parameter 'foo' (line moo) could be declared as pointing to const) (there are a lot of these!)
+
+					// these are caused by macros that evaluate to 0 used in a calculation
+-e835				// error 835: (Info -- A zero has been given as right argument to operator '+')
+
+-e838				// error 838: (Info -- Previously assigned value to variable 'foo' has not been used)  (complaint about initialized auto variables)
+
+-e843				// error 843: (Info -- Variable 'foo' (line 161, file moo.c) could be declared as const)
+-e844				// error 844: (Info -- Pointer variable 'foo' (line 417, file moo.c) could be declared as pointing to const)
+
+// NOTE: we really do NOT want to turn off the errors (831) for unreferenced variables and functions, because they are VERY good indicators of code debris
+
+//\-e1504				// p33FJ128GP804.h(many): error 1504: (Warning -- useless struct declaration)
+
+
+// these error controls were moved to p33FJ128GP804.h
+//-e657				// p33FJ128GP804.h(many): error 657: (Warning -- Unusual (nonportable) anonymous struct or union)
+//+fan				// p33FJ128GP804.h(many): error 658: (Warning -- Anonymous union assumed (use flag +fan))
+//this error block inserted to prevent complaints about p33FJ128GP804.h(2887): error 526: (Warning -- Symbol 'C1CFG1bits' (line 2887, file p33FJ128GP804.h, module dsPIC_Clock.c) not defined)
+// extern volatile C1CFG1BITS C1CFG1bits __attribute__((__sfr__));
+//-e526
+// these error blocks inserted to prevent complaints about lines like  #define _FOSCSEL(x) __attribute__((section("__FOSCSEL.sec"),space(prog))) int _FOSCSEL = (x);
+//-e652				// p33FJ128GP804.h(many): error 652: (Warning -- #define of symbol 'foo' declared previously at line goo)
+//-e830				// p33FJ128GP804.h(many): error 830: (Info -- Location cited in prior message)
+
+
+
+//----------------------------------------
+// 	Project Files to Process
+//----------------------------------------
+
+//source\AppTimer.c
+source\ButtonProcessingFSM.c
+source\CoordTranslate.c
+source\Debounce.c
+source\Debug.c
+//source\ftoa.c
+source\inclinometer.c
+source\LEDs.c
+source\main.c
+source\MenuFSM.c
+source\MotionFSM.c
+source\MotionLimits.c
+source\MotionPhaseFSM.c
+source\MotionSensor.c
+source\MotionStats.c
+source\MotorPWM.c
+source\MoveSequenceFSM.c
+source\RTCC.c
+source\RxMessage.c
+source\SerialDisplay.c
+source\StrConversions.c
+source\Stubs.c
+source\SunPosition.c
+source\SunPositionFSM.c
+source\SystemParameters.c
+// TimeDelay.c
+source\UpdateParameters.c
+//BSP\DS3232.c
+//BSP\I2CBus.c
+//BSP\mma845x.c
+//BSP\PCA9554.c
+//BSP\SerialPort.c
+//BSP\SerialTimer.c
+//BSP\SST25VF016.c
+
+// end
+
+
+// -------------end-----------------------
+

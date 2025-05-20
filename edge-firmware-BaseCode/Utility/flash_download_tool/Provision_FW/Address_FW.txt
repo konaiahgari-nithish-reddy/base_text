@@ -1,0 +1,7 @@
+0x1000 	bootloader.bin 
+0x10000 provisioning.bin 
+0x8000 	partition-table.bin
+
+DIO Mode
+Freq	40MHz
+Flash 	2 MB

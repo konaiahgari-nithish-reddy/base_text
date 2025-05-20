@@ -1,0 +1,93 @@
+Credentials:
+URL: smarttrakportal.in 
+User: smarttrak_cosmic   
+Pass: Smarttrak_Cosmic#@1
+
+smarttrak/cosmic/solartracker/server/monitor/SMRTR2A00
+smarttrak/cosmic/solartracker/server/setting/SMRTR2A00
+smarttrak/cosmic/solartracker/device/setting/SMRTR2A00
+
+--> Read request to send to device
+smarttrak/cosmic/solartracker/device/setting/SMRTR2A00
+{
+  "NodeID": "ST490037",
+  "CMD":  "read"
+}
+
+--> Setting Packet on read request, send from device
+{
+	"NodeID":	"SMRTR2A00",
+	"Res":	"read",
+	"Location":	{
+		"latitude":	"33.3667",
+		"longitude":	"33.4667",
+		"altitude":	"33.0000",
+		"timezone":	"4.5000",
+		"refraction":	"0.3500",
+		"tracking_mode":	1
+	},
+	"Azimuth":	{
+		"Offset":	"1.0000",
+		"SoftLimit_Reverse":	"-44.5000",
+		"SoftLimit_Forward":	"44.5000",
+		"DeadBand":	"0.1000",
+		"NightStowThreshold":	"44.0000",
+		"NightStowPosition":	"44.0000",
+		"WindStowPosition":	"4.0000"
+	},
+	"Elevation":	{
+		"Offset":	"0.0000",
+		"SoftLimit_Reverse":	"-4.5000",
+		"SoftLimit_Forward":	"44.5000",
+		"DeadBand":	"0.0000",
+		"NightStowThreshold":	"-4.0000",
+		"NightStowPosition":	"-4.5000",
+		"WindStowPosition":	"1.0000"
+	},
+	"SingleAxis":	{
+		"BacktrackingEnabled":	0,
+		"PanelShadowStartAngleDegrees":	"44.0000",
+		"SunShadowStartAngleDegrees":	"44.0000",
+		"SunShadowStartHeight":	"0.0000",
+		"Single_SoftLimit_Reverse":	"-44.0000",
+		"Single_SoftLimit_Forward":	"44.0000",
+		"Single_start_date":	"20240312.0000",
+		"Single_stop_days":	"0.0000"
+	}
+}
+
+
+--> To update setting and RTC value via below sequence
+smarttrak/cosmic/solartracker/device/setting/ST33004F
+{
+  "NodeID":       "ST33004F",
+  "Res":  "Update",
+  "RTC":{
+		"Day":	5,
+		"Date":	5,
+		"Month": 7,
+		"Year":	24,
+		"Hour":	8,
+		"Min":	41,
+		"Sec":	0
+	}	
+}
+
+smarttrak/cosmic/solartracker/device/setting/SMRTR2A00
+{
+  "NodeID":       "SMRTR2A00",
+  "Res":  "Update",
+  "Elevation":	{
+		"Offset":	"1.0000",
+		"SoftLimit_Reverse":	"-5.5000",
+		"SoftLimit_Forward":	"55.5000",
+		"DeadBand":	"0.0000",
+		"NightStowThreshold":	"-5.0000",
+		"NightStowPosition":	"-5.5000",
+		"WindStowPosition":	"2.0000"
+	}	
+}
+
+
+--> Current device in observation
+smarttrak/cosmic/solartracker/server/monitor/ST190034 --> test
